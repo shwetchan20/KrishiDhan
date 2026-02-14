@@ -51,5 +51,5 @@ function App() {
         </Router>
     );
 }
-
+// Frontend UI complete - Ready for backend
 export default App;
