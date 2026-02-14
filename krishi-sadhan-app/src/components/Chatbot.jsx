@@ -1,57 +1,65 @@
 import React, { useState } from 'react';
 
-// 1. Accept the 't' prop from App.jsx
 const Chatbot = ({ t }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-            {/* Chat Window */}
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+            {/* Chat Window Container */}
             {isOpen && (
-                <div className="mb-4 bg-white w-80 rounded-lg shadow-xl overflow-hidden border border-gray-100 flex flex-col">
+                <div className="mb-4 bg-white w-80 rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col animate-fade-in">
+
+                    {/* Header - Translated */}
                     <div className="bg-green-700 p-4 flex justify-between items-center text-white">
                         <h3 className="font-bold flex items-center gap-2">
-                            <span>🤖</span> {t('krishi_bot') || 'Krishi Bot'}
+                            <span className="text-xl">🤖</span> {t('krishi_bot')}
                         </h3>
-                        <button onClick={() => setIsOpen(false)} className="hover:text-gray-200">
+                        <button onClick={() => setIsOpen(false)} className="hover:rotate-90 transition-transform duration-200">
                             ✖
                         </button>
                     </div>
-                    <div className="p-4 h-64 overflow-y-auto bg-gray-50 flex flex-col gap-3">
-                        <div className="bg-white p-3 rounded-lg rounded-tl-none shadow-sm text-sm border border-gray-100 self-start max-w-[85%]">
-                            {t('bot_greeting') || 'Namaste! How can I assist you today?'}
+
+                    {/* Chat Messages Area */}
+                    <div className="p-4 h-72 overflow-y-auto bg-gray-50 flex flex-col gap-3">
+                        {/* Bot Greeting - Translated */}
+                        <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm border border-gray-100 self-start max-w-[90%] text-gray-700">
+                            {t('bot_greeting')}
                         </div>
 
-                        {/* Simulated options */}
+                        {/* Interactive Buttons - Translated */}
                         <div className="flex flex-col gap-2 mt-auto">
-                            <button className="bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition text-left">
-                                {t('findEquipment') || 'Find Equipment'}
+                            <button className="bg-green-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl hover:bg-green-700 transition shadow-sm text-left">
+                                🔍 {t('find_equipment')}
                             </button>
-                            <button className="bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition text-left">
-                                {t('my_bookings') || 'My Bookings'}
+
+                            <button className="bg-green-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl hover:bg-green-700 transition shadow-sm text-left">
+                                ➕ {t('list_tool')}
                             </button>
-                            <button className="bg-green-600 text-white text-sm py-2 px-3 rounded-lg hover:bg-green-700 transition text-left">
-                                {t('rental_info') || 'Rental Info'}
+
+                            <button className="bg-green-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl hover:bg-green-700 transition shadow-sm text-left">
+                                📊 {t('orders')}
                             </button>
                         </div>
                     </div>
-                    <div className="p-3 border-t border-gray-100 bg-white">
+
+                    {/* Input Area - Translated */}
+                    <div className="p-4 border-t border-gray-100 bg-white">
                         <input
                             type="text"
-                            placeholder={t('type_message') || "Type a message..."}
-                            className="w-full text-sm outline-none px-2 py-1"
+                            placeholder={t('type_message')}
+                            className="w-full text-sm outline-none px-3 py-2 bg-gray-100 rounded-xl"
                             disabled
                         />
                     </div>
                 </div>
             )}
 
-            {/* Toggle Button */}
+            {/* Main Toggle Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="bg-green-700 hover:bg-green-800 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-105 flex items-center justify-center w-14 h-14"
+                className="bg-green-700 hover:bg-green-800 text-white rounded-full shadow-2xl transition-all transform hover:scale-110 flex items-center justify-center w-16 h-16 active:scale-95"
             >
-                {isOpen ? '✖' : '💬'}
+                {isOpen ? <span className="text-xl">✖</span> : <span className="text-2xl">💬</span>}
             </button>
         </div>
     );

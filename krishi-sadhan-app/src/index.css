@@ -1,3 +1,54 @@
+/* 1. Google Font Import (Poppins) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* 2. Tailwind Directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 3. Custom Global Styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Smooth scrolling effect */
+  }
+
+  body {
+    /* Set Poppins as default font */
+    font-family: 'Poppins', sans-serif;
+    @apply text-gray-800 bg-gray-50;
+  }
+
+  /* Headings styles */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold text-gray-900;
+  }
+}
+
+/* 4. Custom Scrollbar (Green Theme) */
+::-webkit-scrollbar {
+  width: 10px;
+  /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  /* Background color of the track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #15803d;
+  /* Green color for the handle */
+  border-radius: 5px;
+  /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #14532d;
+  /* Darker green on hover */
+}
