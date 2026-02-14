@@ -1,74 +1,157 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Register = ({ t }) => {
-    const [role, setRole] = useState('farmer');
-    // 1. Error state add kela
+    const navigate = useNavigate();
+
+    // State matching strict schema: name, phone, city, email, password
+    const [formData, setFormData] = useState({
+        name: '',
+        phone: '',
+        city: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    });
     const [error, setError] = useState("");
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setError("");
+    };
 
     const handleRegister = (e) => {
         e.preventDefault();
-        // Simulating a validation error
-        setError(t('error_required') || "This field is required.");
+
+        // Validation using translation keys
+        if (formData.password !== formData.confirmPassword) {
+            setError(t('passwords_not_match'));
+            return;
+        }
+
+        if (!formData.name || !formData.phone || !formData.city || !formData.email) {
+            setError(t('all_fields_required'));
+            return;
+        }
+
+        // Prepare data for backend createUser function
+        console.log("Registering with schema:", formData);
+        alert("Registration Successful!");
+        navigate('/login');
     };
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6 text-center">{t('register')}</h2>
+        <div className="min-h-screen flex items-center justify-center bg-white px-6 py-10 font-sans">
+            <div className="w-full max-w-sm">
 
-            {/* 2. Error Alert Box */}
-            {error && (
-                <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 text-sm rounded text-center">
-                    {error}
+                {/* Header UI - Translated */}
+                <div className="text-center mb-10">
+                    <img
+                        src="https://raw.githubusercontent.com/shwetchan20/KrishiDhan-Assets/main/logo.png"
+                        alt="Logo"
+                        className="w-24 mx-auto mb-4"
+                    />
+                    <h2 className="text-2xl font-black text-gray-800">{t('register')}</h2>
+                    <p className="text-gray-400 text-sm mt-1">Join the KrishiDhan marketplace</p>
                 </div>
-            )}
 
-            <form className="space-y-4" onSubmit={handleRegister}>
-                <div>
-                    <label className="block mb-1 font-medium text-gray-700">{t('i_am_a') || 'I am a:'}</label>
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-green-500"
+                {/* Error Message UI */}
+                {error && (
+                    <div className="mb-6 p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl text-center font-bold">
+                        {error}
+                    </div>
+                )}
+
+                <form className="space-y-5" onSubmit={handleRegister}>
+                    {/* Schema: Full Name */}
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('full_name')}</label>
+                        <input
+                            type="text"
+                            name="name"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="John Doe"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    {/* Schema: Email */}
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('email_address')}</label>
+                        <input
+                            type="email"
+                            name="email"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="name@example.com"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    {/* Schema: Phone */}
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('mobile_label')}</label>
+                        <input
+                            type="tel"
+                            name="phone"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="9876543210"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    {/* Schema: City */}
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('city_village')}</label>
+                        <input
+                            type="text"
+                            name="city"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="Kolhapur"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    {/* Auth: Password */}
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('password')}</label>
+                        <input
+                            type="password"
+                            name="password"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="••••••••"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('confirm_password')}</label>
+                        <input
+                            type="password"
+                            name="confirmPassword"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="••••••••"
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full bg-green-700 text-white font-black py-4 rounded-xl mt-4 shadow-lg active:scale-95 transition-all"
                     >
-                        <option value="farmer">{t('role_farmer') || 'Farmer'}</option>
-                        <option value="owner">{t('role_owner') || 'Owner'}</option>
-                    </select>
-                </div>
+                        {t('register').toUpperCase()}
+                    </button>
+                </form>
 
-                <div>
-                    <label className="block mb-1 font-medium text-gray-700">{t('name') || 'Name'}</label>
-                    <input
-                        type="text"
-                        className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-green-500"
-                        placeholder={t('full_name') || 'Full Name'}
-                        required
-                    />
+                <div className="mt-8 text-center text-sm text-gray-500">
+                    Already have an account? <Link to="/login" className="text-green-700 font-bold hover:underline ml-1">{t('login')}</Link>
                 </div>
-
-                <div>
-                    <label className="block mb-1 font-medium text-gray-700">{t('email_phone') || 'Email or Phone'}</label>
-                    <input
-                        type="text"
-                        className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-green-500"
-                        placeholder={t('enter_email_phone') || 'Enter email or phone'}
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block mb-1 font-medium text-gray-700">{t('password')}</label>
-                    <input
-                        type="password"
-                        className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-green-500"
-                        placeholder={t('create_password') || 'Create password'}
-                        required
-                    />
-                </div>
-
-                <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-bold transition duration-200">
-                    {t('register')}
-                </button>
-            </form>
+            </div>
         </div>
     );
 };

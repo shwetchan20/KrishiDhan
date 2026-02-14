@@ -3,47 +3,41 @@ import React from 'react';
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { hasError: false, error: null, errorInfo: null };
+        this.state = { hasError: false };
     }
 
-    static getDerivedStateFromError() {
+    static getDerivedStateFromError(error) {
         return { hasError: true };
     }
 
     componentDidCatch(error, errorInfo) {
-        this.setState({ error, errorInfo });
-        console.error("Uncaught error:", error, errorInfo);
+        console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
 
     render() {
-        // 1. Accessing 't' from props
         const { t } = this.props;
 
         if (this.state.hasError) {
             return (
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                    {/* 2. Using translated keys */}
-                    <h1 className="text-2xl font-bold text-red-600 mb-4">
-                        {t('error_title') || 'Something went wrong.'}
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center font-sans">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm">
+                        ⚠️
+                    </div>
+
+                    <h1 className="text-3xl font-black text-gray-800 mb-2">
+                        {t('error_title')}
                     </h1>
 
-                    <p className="mb-4 text-gray-600">
-                        {t('error_message') || 'Please try refreshing the page.'}
+                    <p className="text-gray-500 mb-8 max-w-md mx-auto">
+                        {t('error_message')}
                     </p>
 
                     <button
                         onClick={() => window.location.reload()}
-                        className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 mb-6"
+                        className="bg-green-700 text-white px-10 py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-green-800 transition-all transform hover:-translate-y-1"
                     >
-                        {t('refresh_button') || 'Refresh'}
+                        {t('refresh_button')}
                     </button>
-
-                    {/* Developer details (optional, usually hidden for farmers) */}
-                    <details className="text-left text-xs text-gray-400 mt-8" style={{ whiteSpace: 'pre-wrap' }}>
-                        {this.state.error && this.state.error.toString()}
-                        <br />
-                        {this.state.errorInfo && this.state.errorInfo.componentStack}
-                    </details>
                 </div>
             );
         }
