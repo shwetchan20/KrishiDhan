@@ -14,7 +14,8 @@
 
   body {
     font-family: 'Poppins', sans-serif;
-    @apply text-gray-800 bg-gray-50;
+    /* Updated background to match Green-White theme consistently */
+    @apply text-gray-800 bg-white;
   }
 
   h1,
@@ -29,24 +30,24 @@
 
 /* 4. Custom Scrollbar (Green Theme) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f0fdf4;
+  /* Very light green track */
 }
 
 ::-webkit-scrollbar-thumb {
   background: #15803d;
+  /* Dark green thumb */
   border-radius: 10px;
 }
 
-/* =========================================
-   5. NEW ANIMATIONS (Schemes Moving Effect)
-   ========================================= */
+/* 5. Infinite Rotation Animation for Government Schemes */
 
-/* Keyframe for sliding animation */
+/* Keyframe for sliding animation - moves list to the left */
 @keyframes scroll {
   0% {
     transform: translateX(0);
@@ -54,29 +55,39 @@
 
   100% {
     transform: translateX(-50%);
+    /* Moves exactly half-way because list is doubled */
   }
 }
 
-/* Animation Utility Class */
+/* Animation Utility Class used in Home.jsx */
 .animate-scroll-slow {
-  animation: scroll 20s linear infinite;
-  /* पट्टी फिरण्याची गती (Speed) */
+  animation: scroll 25s linear infinite;
+  /* Smooth continuous speed */
   display: flex;
   width: max-content;
 }
 
-/* Pause animation when user hovers/touches */
+/* Pause animation when user hovers or interacts with the list */
 .pause-animation:hover,
 .pause-animation:active {
   animation-play-state: paused;
 }
 
-/* Hide Scrollbar (Clean UI for horizontal scrolling) */
+/* 6. Clean UI Utilities */
+
+/* Hide Scrollbar for containers using .no-scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
 .no-scrollbar {
   -ms-overflow-style: none;
+  /* IE and Edge */
   scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Global utility for consistent card shadows in new theme */
+.green-shadow {
+  box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.1), 0 4px 6px -4px rgba(34, 197, 94, 0.1);
 }

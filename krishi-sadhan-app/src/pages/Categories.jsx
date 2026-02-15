@@ -6,7 +6,6 @@ import MobileLayout from '../components/MobileLayout';
 const Categories = ({ t }) => {
     const navigate = useNavigate();
 
-    // Data for equipment categories
     const categories = [
         { id: 1, name: 'Tractors', icon: <Tractor size={28} />, color: 'bg-orange-50 text-orange-600 border-orange-100', items: '120+' },
         { id: 2, name: 'Harvesters', icon: <Truck size={28} />, color: 'bg-green-50 text-green-600 border-green-100', items: '45+' },
@@ -17,36 +16,36 @@ const Categories = ({ t }) => {
     ];
 
     return (
-        <MobileLayout t={t}>
-            <div className="pb-6">
-                {/* Section Header */}
-                <div className="flex justify-between items-end mb-6 px-1">
-                    <div>
-                        <h2 className="text-xl font-black text-gray-800">{t('category')}</h2>
-                        <p className="text-xs text-gray-400 font-medium mt-1">Explore equipment by type</p>
+        <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+            <MobileLayout t={t}>
+                <div className="pb-6">
+                    <div className="flex justify-between items-end mb-6 px-1">
+                        <div>
+                            <h2 className="text-xl font-black text-gray-800">{t('category')}</h2>
+                            <p className="text-xs text-gray-400 font-medium mt-1">Explore equipment by type</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {categories.map((cat) => (
+                            <div
+                                key={cat.id}
+                                onClick={() => navigate('/home')}
+                                className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm active:scale-95 transition-all flex flex-col items-center text-center group"
+                            >
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 border ${cat.color} group-hover:scale-110 transition-transform`}>
+                                    {cat.icon}
+                                </div>
+                                <h3 className="font-bold text-gray-800 text-sm">{cat.name}</h3>
+                                <p className="text-[10px] text-gray-400 font-bold mt-1 bg-gray-50 px-2 py-0.5 rounded-full">
+                                    {cat.items} Items
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </div>
-
-                {/* Grid Layout for Categories */}
-                <div className="grid grid-cols-2 gap-4">
-                    {categories.map((cat) => (
-                        <div
-                            key={cat.id}
-                            onClick={() => navigate('/home')}
-                            className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm active:scale-95 transition-all flex flex-col items-center text-center group"
-                        >
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 border ${cat.color} group-hover:scale-110 transition-transform`}>
-                                {cat.icon}
-                            </div>
-                            <h3 className="font-bold text-gray-800 text-sm">{cat.name}</h3>
-                            <p className="text-[10px] text-gray-400 font-bold mt-1 bg-gray-50 px-2 py-0.5 rounded-full">
-                                {cat.items} Items
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </MobileLayout>
+            </MobileLayout>
+        </div>
     );
 };
 
