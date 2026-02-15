@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { translations } from './utils/translations';
 
-// --- PAGE IMPORTS ---
+// --- ROUTE COMPONENTS ---
 import SplashScreen from './pages/SplashScreen';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -13,48 +13,49 @@ import Profile from './pages/Profile';
 import MyOrders from './pages/MyOrders';
 import Categories from './pages/Categories';
 import EquipmentDetails from './pages/EquipmentDetails';
-import Schemes from './pages/Schemes'; // <--- Imported Schemes Page
+import Schemes from './pages/Schemes';
 import Chatbot from './components/Chatbot';
 
 function App() {
-    // 1. Language State
+    // Persistent Language State
     const [lang, setLang] = useState('en');
 
-    // 2. Translation Helper
+    // Translation Utility Function
     const t = (key) => translations[lang][key] || key;
 
     return (
         <Router>
-            <div className="min-h-screen bg-gray-50 text-gray-900 font-sans relative">
+            <div className="min-h-screen bg-gray-50 text-gray-900 font-sans relative overflow-x-hidden">
                 <Routes>
+                    {/* Splash Screen Intro */}
                     <Route path="/" element={<SplashScreen t={t} />} />
+
+                    {/* Authentication Flow */}
                     <Route path="/login" element={<Login t={t} />} />
                     <Route path="/register" element={<Register t={t} />} />
 
-                    {/* Main App Flow */}
+                    {/* Main Application Routes */}
                     <Route path="/home" element={<Home t={t} />} />
-
+                    <Route path="/categories" element={<Categories t={t} />} />
                     <Route path="/post-choice" element={<PostChoice t={t} />} />
                     <Route path="/post-equipment" element={<PostEquipment t={t} />} />
 
-                    {/* Equipment Details Route */}
+                    {/* Dynamic Equipment Route */}
                     <Route path="/equipment/:id" element={<EquipmentDetails t={t} />} />
 
-                    {/* Profile & Settings */}
+                    {/* Personal & Records */}
                     <Route path="/profile" element={<Profile t={t} setLang={setLang} currentLang={lang} />} />
                     <Route path="/my-orders" element={<MyOrders t={t} />} />
-                    <Route path="/categories" element={<Categories t={t} />} />
 
-                    {/* Schemes Route - Connects to 'View All' button */}
+                    {/* External Content */}
                     <Route path="/schemes" element={<Schemes t={t} />} />
                 </Routes>
 
-                {/* --- REAL TRANSLATED CHATBOT --- */}
+                {/* AI Assistant - Always Available */}
                 <Chatbot t={t} />
             </div>
         </Router>
     );
 }
 
-// Frontend UI complete - Ready for backend
 export default App;

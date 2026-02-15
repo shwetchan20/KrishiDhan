@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tractor, Sprout, Hammer, Truck, Shovel, Droplets, ChevronRight } from 'lucide-react';
+import { Tractor, Sprout, Hammer, Truck, Shovel, Droplets } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
 
 const Categories = ({ t }) => {
     const navigate = useNavigate();
 
-    // Categories Data
+    // Data for equipment categories
     const categories = [
         { id: 1, name: 'Tractors', icon: <Tractor size={28} />, color: 'bg-orange-50 text-orange-600 border-orange-100', items: '120+' },
         { id: 2, name: 'Harvesters', icon: <Truck size={28} />, color: 'bg-green-50 text-green-600 border-green-100', items: '45+' },
@@ -19,8 +19,7 @@ const Categories = ({ t }) => {
     return (
         <MobileLayout t={t}>
             <div className="pb-6">
-
-                {/* Header Section */}
+                {/* Section Header */}
                 <div className="flex justify-between items-end mb-6 px-1">
                     <div>
                         <h2 className="text-xl font-black text-gray-800">{t('category')}</h2>
@@ -28,20 +27,17 @@ const Categories = ({ t }) => {
                     </div>
                 </div>
 
-                {/* Categories Grid */}
+                {/* Grid Layout for Categories */}
                 <div className="grid grid-cols-2 gap-4">
                     {categories.map((cat) => (
                         <div
                             key={cat.id}
-                            onClick={() => navigate('/home')} // Redirects to home filtered by category (logic can be added later)
+                            onClick={() => navigate('/home')}
                             className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm active:scale-95 transition-all flex flex-col items-center text-center group"
                         >
-                            {/* Icon Circle */}
                             <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 border ${cat.color} group-hover:scale-110 transition-transform`}>
                                 {cat.icon}
                             </div>
-
-                            {/* Text */}
                             <h3 className="font-bold text-gray-800 text-sm">{cat.name}</h3>
                             <p className="text-[10px] text-gray-400 font-bold mt-1 bg-gray-50 px-2 py-0.5 rounded-full">
                                 {cat.items} Items
@@ -49,19 +45,6 @@ const Categories = ({ t }) => {
                         </div>
                     ))}
                 </div>
-
-                {/* Trending Tags Section */}
-                <div className="mt-8">
-                    <h3 className="text-sm font-bold text-gray-800 mb-3 px-1">🔥 Trending Searches</h3>
-                    <div className="flex flex-wrap gap-2">
-                        {['Mahindra', 'John Deere', 'Rotavator', 'Drone', 'Pesticide'].map((tag) => (
-                            <button key={tag} className="bg-white border border-gray-200 px-4 py-2 rounded-full text-xs font-bold text-gray-600 shadow-sm active:bg-gray-50">
-                                # {tag}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
             </div>
         </MobileLayout>
     );

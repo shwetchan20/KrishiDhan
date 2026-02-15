@@ -6,21 +6,21 @@ const Login = ({ t }) => {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6">
-            {/* Top Center Logo */}
+            {/* Main Brand Logo - Updated to official asset */}
             <img
-                src="https://raw.githubusercontent.com/shwetchan20/KrishiDhan-Assets/main/logo.png"
-                alt="Logo"
-                className="w-32 mb-10"
+                src="/logo.jpeg"
+                alt="KrishiDhan Logo"
+                className="w-48 mb-8 object-contain mx-auto"
             />
 
             <div className="w-full max-w-sm">
-                {/* UI Tabs - Translated */}
+                {/* Auth Tabs */}
                 <div className="flex border-b mb-8">
                     <button className="flex-1 pb-2 border-b-2 border-green-700 font-bold text-green-700">{t('login')}</button>
                     <Link to="/register" className="flex-1 pb-2 text-gray-400 text-center font-medium">{t('register')}</Link>
                 </div>
 
-                {/* Form UI - Translated */}
+                {/* Login Form */}
                 <div className="space-y-6">
                     <div>
                         <label className="text-xs font-bold text-gray-400 uppercase ml-1">{t('email_address')}</label>
