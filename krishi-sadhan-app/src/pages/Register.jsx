@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const Register = ({ t }) => {
     const navigate = useNavigate();
 
-    // State matching strict schema: name, phone, city, email, password
+    // Form state handling basic user schema
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -23,19 +23,13 @@ const Register = ({ t }) => {
     const handleRegister = (e) => {
         e.preventDefault();
 
-        // Validation using translation keys
+        // Basic password validation
         if (formData.password !== formData.confirmPassword) {
             setError(t('passwords_not_match'));
             return;
         }
 
-        if (!formData.name || !formData.phone || !formData.city || !formData.email) {
-            setError(t('all_fields_required'));
-            return;
-        }
-
-        // Prepare data for backend createUser function
-        console.log("Registering with schema:", formData);
+        console.log("Registering user:", formData);
         alert("Registration Successful!");
         navigate('/login');
     };
@@ -44,26 +38,24 @@ const Register = ({ t }) => {
         <div className="min-h-screen flex items-center justify-center bg-white px-6 py-10 font-sans">
             <div className="w-full max-w-sm">
 
-                {/* Header UI - Translated */}
-                <div className="text-center mb-10">
+                <div className="text-center mb-8">
+                    {/* Centered Brand Logo - Updated path to public folder */}
                     <img
-                        src="https://raw.githubusercontent.com/shwetchan20/KrishiDhan-Assets/main/logo.png"
-                        alt="Logo"
-                        className="w-24 mx-auto mb-4"
+                        src="/logo.jpeg"
+                        alt="KrishiDhan Logo"
+                        className="w-32 mx-auto mb-4 object-contain"
                     />
                     <h2 className="text-2xl font-black text-gray-800">{t('register')}</h2>
                     <p className="text-gray-400 text-sm mt-1">Join the KrishiDhan marketplace</p>
                 </div>
 
-                {/* Error Message UI */}
                 {error && (
                     <div className="mb-6 p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl text-center font-bold">
                         {error}
                     </div>
                 )}
 
-                <form className="space-y-5" onSubmit={handleRegister}>
-                    {/* Schema: Full Name */}
+                <form className="space-y-4" onSubmit={handleRegister}>
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('full_name')}</label>
                         <input
@@ -76,7 +68,6 @@ const Register = ({ t }) => {
                         />
                     </div>
 
-                    {/* Schema: Email */}
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('email_address')}</label>
                         <input
@@ -89,9 +80,8 @@ const Register = ({ t }) => {
                         />
                     </div>
 
-                    {/* Schema: Phone */}
                     <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('mobile_label')}</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('phone_label')}</label>
                         <input
                             type="tel"
                             name="phone"
@@ -102,9 +92,8 @@ const Register = ({ t }) => {
                         />
                     </div>
 
-                    {/* Schema: City */}
                     <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('city_village')}</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('city_label')}</label>
                         <input
                             type="text"
                             name="city"
@@ -115,7 +104,6 @@ const Register = ({ t }) => {
                         />
                     </div>
 
-                    {/* Auth: Password */}
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('password')}</label>
                         <input

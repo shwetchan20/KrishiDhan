@@ -5,7 +5,7 @@ const SplashScreen = ({ t }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // UI Logic: Wait 3 seconds, then go to Login
+        // Automatically navigate to Login after 3 seconds
         const timer = setTimeout(() => {
             navigate('/login');
         }, 3000);
@@ -14,12 +14,12 @@ const SplashScreen = ({ t }) => {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-            {/* Logo Only - No text below as requested */}
-            <div onClick={() => navigate('/login')} className="cursor-pointer">
+            <div onClick={() => navigate('/login')} className="cursor-pointer flex flex-col items-center">
+                {/* Official Brand Logo - Enlarged and using local path */}
                 <img
-                    src="https://raw.githubusercontent.com/shwetchan20/KrishiDhan-Assets/main/logo.png"
+                    src="/logo.jpeg"
                     alt="KrishiDhan Logo"
-                    className="w-64 md:w-80 h-auto animate-pulse"
+                    className="w-80 h-auto animate-pulse"
                 />
             </div>
         </div>

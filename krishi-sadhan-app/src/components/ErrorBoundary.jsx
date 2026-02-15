@@ -6,10 +6,12 @@ class ErrorBoundary extends React.Component {
         this.state = { hasError: false };
     }
 
+    // Update state so the next render will show the fallback UI
     static getDerivedStateFromError(error) {
         return { hasError: true };
     }
 
+    // Log error details for debugging
     componentDidCatch(error, errorInfo) {
         console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
@@ -32,6 +34,7 @@ class ErrorBoundary extends React.Component {
                         {t('error_message')}
                     </p>
 
+                    {/* Action button to reload the application */}
                     <button
                         onClick={() => window.location.reload()}
                         className="bg-green-700 text-white px-10 py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-green-800 transition-all transform hover:-translate-y-1"
