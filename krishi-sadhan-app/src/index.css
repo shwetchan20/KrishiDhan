@@ -10,16 +10,13 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* Smooth scrolling effect */
   }
 
   body {
-    /* Set Poppins as default font */
     font-family: 'Poppins', sans-serif;
     @apply text-gray-800 bg-gray-50;
   }
 
-  /* Headings styles */
   h1,
   h2,
   h3,
@@ -32,23 +29,54 @@
 
 /* 4. Custom Scrollbar (Green Theme) */
 ::-webkit-scrollbar {
-  width: 10px;
-  /* Width of the scrollbar */
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
-  /* Background color of the track */
 }
 
 ::-webkit-scrollbar-thumb {
   background: #15803d;
-  /* Green color for the handle */
-  border-radius: 5px;
-  /* Rounded corners */
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #14532d;
-  /* Darker green on hover */
+/* =========================================
+   5. NEW ANIMATIONS (Schemes Moving Effect)
+   ========================================= */
+
+/* Keyframe for sliding animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Animation Utility Class */
+.animate-scroll-slow {
+  animation: scroll 20s linear infinite;
+  /* पट्टी फिरण्याची गती (Speed) */
+  display: flex;
+  width: max-content;
+}
+
+/* Pause animation when user hovers/touches */
+.pause-animation:hover,
+.pause-animation:active {
+  animation-play-state: paused;
+}
+
+/* Hide Scrollbar (Clean UI for horizontal scrolling) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -13,7 +13,8 @@ import Profile from './pages/Profile';
 import MyOrders from './pages/MyOrders';
 import Categories from './pages/Categories';
 import EquipmentDetails from './pages/EquipmentDetails';
-import Chatbot from './components/Chatbot'; // <--- Import the real Chatbot
+import Schemes from './pages/Schemes'; // <--- Imported Schemes Page
+import Chatbot from './components/Chatbot';
 
 function App() {
     // 1. Language State
@@ -32,6 +33,7 @@ function App() {
 
                     {/* Main App Flow */}
                     <Route path="/home" element={<Home t={t} />} />
+
                     <Route path="/post-choice" element={<PostChoice t={t} />} />
                     <Route path="/post-equipment" element={<PostEquipment t={t} />} />
 
@@ -40,16 +42,19 @@ function App() {
 
                     {/* Profile & Settings */}
                     <Route path="/profile" element={<Profile t={t} setLang={setLang} currentLang={lang} />} />
-
                     <Route path="/my-orders" element={<MyOrders t={t} />} />
                     <Route path="/categories" element={<Categories t={t} />} />
+
+                    {/* Schemes Route - Connects to 'View All' button */}
+                    <Route path="/schemes" element={<Schemes t={t} />} />
                 </Routes>
 
                 {/* --- REAL TRANSLATED CHATBOT --- */}
-                <Chatbot t={t} /> {/* <--- Replaces FloatingChatbot */}
+                <Chatbot t={t} />
             </div>
         </Router>
     );
 }
+
 // Frontend UI complete - Ready for backend
 export default App;
