@@ -21,11 +21,17 @@ function App() {
     const [lang, setLang] = useState('en');
 
     // Translation Utility Function
-    const t = (key) => translations[lang][key] || key;
+    const t = (key) => {
+        if (!translations[lang] || !translations[lang][key]) {
+            return translations['en'][key] || key;
+        }
+        return translations[lang][key];
+    };
 
     return (
         <Router>
-            <div className="min-h-screen bg-gray-50 text-gray-900 font-sans relative overflow-x-hidden">
+            {/* Added Green-White Gradient Background globally */}
+            <div className="min-h-screen bg-gradient-to-b from-green-50 to-white text-gray-900 font-sans relative overflow-x-hidden">
                 <Routes>
                     {/* Splash Screen Intro */}
                     <Route path="/" element={<SplashScreen t={t} />} />

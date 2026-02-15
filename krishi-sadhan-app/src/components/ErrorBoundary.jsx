@@ -6,12 +6,10 @@ class ErrorBoundary extends React.Component {
         this.state = { hasError: false };
     }
 
-    // Update state so the next render will show the fallback UI
     static getDerivedStateFromError(error) {
         return { hasError: true };
     }
 
-    // Log error details for debugging
     componentDidCatch(error, errorInfo) {
         console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
@@ -21,8 +19,9 @@ class ErrorBoundary extends React.Component {
 
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center font-sans">
-                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm">
+                /* Updated to Green-White Gradient Background */
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-green-50 to-white p-6 text-center font-sans">
+                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm border border-red-100">
                         ⚠️
                     </div>
 
@@ -34,7 +33,6 @@ class ErrorBoundary extends React.Component {
                         {t('error_message')}
                     </p>
 
-                    {/* Action button to reload the application */}
                     <button
                         onClick={() => window.location.reload()}
                         className="bg-green-700 text-white px-10 py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-green-800 transition-all transform hover:-translate-y-1"

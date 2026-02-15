@@ -10,20 +10,16 @@ const Chatbot = ({ t }) => {
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
 
-    // Automatically scroll to the latest message
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isOpen]);
 
     const handleSend = async () => {
         if (!input.trim()) return;
-
         const userMsg = { id: Date.now(), text: input, sender: 'user', isKey: false };
         setMessages(prev => [...prev, userMsg]);
         setInput("");
         setIsTyping(true);
-
-        // Simulate automated bot response
         setTimeout(() => {
             const botResponse = {
                 id: Date.now() + 1,
@@ -38,16 +34,12 @@ const Chatbot = ({ t }) => {
 
     return (
         <div className={`fixed bottom-24 right-4 z-[60] flex flex-col items-end gap-4 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-
-            {/* Chat Interface Window */}
             {isOpen && (
-                <div className="bg-white w-80 h-96 rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 pointer-events-auto">
-
-                    {/* Chat Header with Branding */}
+                /* Updated Chat Window with Green-White Gradient */
+                <div className="bg-gradient-to-b from-green-50 to-white w-80 h-96 rounded-2xl shadow-2xl border border-green-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 pointer-events-auto">
                     <div className="bg-green-700 p-4 flex justify-between items-center text-white">
                         <div className="flex items-center gap-2">
                             <div className="bg-white p-1 rounded-full flex items-center justify-center">
-                                {/* Official Logo using local path */}
                                 <img src="/logo.jpeg" alt="Bot Logo" className="w-5 h-5 object-contain" />
                             </div>
                             <span className="font-bold text-sm">{t('krishi_bot')}</span>
@@ -62,12 +54,12 @@ const Chatbot = ({ t }) => {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-transparent">
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] p-3 rounded-2xl text-xs font-medium ${msg.sender === 'user'
                                     ? 'bg-green-700 text-white rounded-tr-none'
-                                    : 'bg-white text-gray-700 border border-gray-200 rounded-tl-none shadow-sm'
+                                    : 'bg-white text-gray-700 border border-green-50 rounded-tl-none shadow-sm'
                                     }`}>
                                     {msg.isKey ? t(msg.text) : msg.text}
                                 </div>
@@ -75,20 +67,20 @@ const Chatbot = ({ t }) => {
                         ))}
                         {isTyping && (
                             <div className="flex justify-start">
-                                <div className="bg-white border border-gray-200 px-3 py-2 rounded-2xl rounded-tl-none shadow-sm text-gray-400 text-[10px]">typing...</div>
+                                <div className="bg-white border border-green-50 px-3 py-2 rounded-2xl rounded-tl-none shadow-sm text-gray-400 text-[10px]">typing...</div>
                             </div>
                         )}
                         <div ref={messagesEndRef} />
                     </div>
 
-                    <div className="p-3 bg-white border-t border-gray-100 flex gap-2">
+                    <div className="p-3 bg-white border-t border-green-50 flex gap-2">
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                             placeholder={t('type_message')}
-                            className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700"
+                            className="flex-1 bg-green-50/50 rounded-full px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-700"
                         />
                         <button onClick={handleSend} disabled={!input.trim()} className="bg-green-700 text-white p-2 rounded-full disabled:opacity-50 hover:scale-105 transition-transform">
                             <Send size={16} />
@@ -97,7 +89,6 @@ const Chatbot = ({ t }) => {
                 </div>
             )}
 
-            {/* Main Floating Action Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="pointer-events-auto bg-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-all border-2 border-green-700 overflow-hidden"
