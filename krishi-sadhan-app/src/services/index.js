@@ -4,4 +4,4 @@ export { createListing, getListings, getListingById, deleteListing } from './lis
 export { createRequest, getRequests, updateRequestStatus, updatePaymentStatus } from './requestService';
 export { createListingFlow, createListingWithImages } from './createListingFlow';
 export { getImpactMetrics } from './impactService';
-export { getRentRateByCategory, RENT_RATE_CARD } from './rateCard';
+export { getRentRateByCategory, getAllowedRentUnits, CATEGORY_LABELS, RENT_RATE_CARD } from './rateCard';

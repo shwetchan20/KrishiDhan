@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tractor, Sprout, Hammer, Truck, Shovel, Droplets } from 'lucide-react';
+import { Tractor, Sprout, Hammer, Truck, Shovel, Wind, RotateCcw } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
 
 const Categories = ({ t }) => {
@@ -11,9 +11,11 @@ const Categories = ({ t }) => {
         { id: 1, key: 'tractor', name: 'Tractors', icon: <Tractor size={28} />, color: 'bg-orange-50 text-orange-600 border-orange-100', items: 'Live' },
         { id: 2, key: 'harvester', name: 'Harvesters', icon: <Truck size={28} />, color: 'bg-green-50 text-green-600 border-green-100', items: 'Live' },
         { id: 3, key: 'tools', name: 'Farming Tools', icon: <Hammer size={28} />, color: 'bg-blue-50 text-blue-600 border-blue-100', items: 'Live' },
-        { id: 4, key: 'seeds', name: 'Seeds', icon: <Sprout size={28} />, color: 'bg-yellow-50 text-yellow-600 border-yellow-100', items: 'Live' },
-        { id: 5, key: 'irrigation', name: 'Irrigation', icon: <Droplets size={28} />, color: 'bg-cyan-50 text-cyan-600 border-cyan-100', items: 'Live' },
-        { id: 6, key: 'tillage', name: 'Tillage', icon: <Shovel size={28} />, color: 'bg-purple-50 text-purple-600 border-purple-100', items: 'Live' },
+        { id: 4, key: 'blower', name: 'Blower', icon: <Wind size={28} />, color: 'bg-yellow-50 text-yellow-600 border-yellow-100', items: 'Live' },
+        { id: 5, key: 'trolly', name: 'Trolly', icon: <Truck size={28} />, color: 'bg-cyan-50 text-cyan-600 border-cyan-100', items: 'Live' },
+        { id: 6, key: 'sowing_machine', name: 'Sowing Machine', icon: <Sprout size={28} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100', items: 'Live' },
+        { id: 7, key: 'thresing_machine', name: 'Thresing Machine', icon: <Shovel size={28} />, color: 'bg-purple-50 text-purple-600 border-purple-100', items: 'Live' },
+        { id: 8, key: 'rotar', name: 'Rotar', icon: <RotateCcw size={28} />, color: 'bg-lime-50 text-lime-700 border-lime-100', items: 'Live' },
     ];
 
     return (

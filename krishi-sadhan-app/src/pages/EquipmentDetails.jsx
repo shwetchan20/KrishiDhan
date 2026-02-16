@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, ShieldCheck, Trash2 } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import { createRequest, deleteListing, getListingById, getRentRateByCategory, getUser } from '../services';
+import { createRequest, deleteListing, getAllowedRentUnits, getListingById, getRentRateByCategory, getUser } from '../services';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -25,8 +25,8 @@ const EquipmentDetails = ({ t }) => {
     const [hourDate, setHourDate] = useState('');
     const [hourStartTime, setHourStartTime] = useState('');
     const [hourCount, setHourCount] = useState(1);
-    const [acreDate, setAcreDate] = useState('');
-    const [acreCount, setAcreCount] = useState(1);
+    const [unitDate, setUnitDate] = useState('');
+    const [unitCount, setUnitCount] = useState(1);
     const [requestMessage, setRequestMessage] = useState('');
 
     const currentUid = localStorage.getItem('kd_uid') || '';
@@ -58,9 +58,29 @@ const EquipmentDetails = ({ t }) => {
     }, [id]);
 
     const rateCard = getRentRateByCategory(item?.category);
-    const hourlyRate = Number(item?.pricePerDay) || Number(rateCard.hour);
-    const dayRate = Math.round(hourlyRate * 8);
-    const acreRate = Number(rateCard.acre);
+    const availableBookingModes = item?.listingType === 'rent' ? getAllowedRentUnits(item?.category) : [];
+
+    useEffect(() => {
+        if (availableBookingModes.length > 0) {
+            setBookingMode((prev) => (availableBookingModes.includes(prev) ? prev : availableBookingModes[0]));
+        }
+    }, [item?.id, availableBookingModes]);
+
+    const getRateForMode = (mode) => {
+        if (!item) return 0;
+        const modeRate = Number(rateCard?.[mode]);
+        const listingRate = Number(item?.pricePerDay);
+        if (mode === item?.priceUnit && Number.isFinite(listingRate) && listingRate > 0) {
+            return listingRate;
+        }
+        if (Number.isFinite(modeRate) && modeRate > 0) {
+            return modeRate;
+        }
+        if (mode === 'day' && Number.isFinite(Number(rateCard?.hour))) {
+            return Math.round(Number(rateCard.hour) * 8);
+        }
+        return 0;
+    };
 
     const computed = useMemo(() => {
         if (!item || item.listingType !== 'rent') {
@@ -83,6 +103,7 @@ const EquipmentDetails = ({ t }) => {
         }
 
         if (bookingMode === 'day') {
+            const dayRate = getRateForMode('day');
             const start = dayStartDate ? new Date(dayStartDate) : null;
             const end = dayEndDate ? new Date(dayEndDate) : null;
             const validRange = start && end && end >= start;
@@ -107,6 +128,7 @@ const EquipmentDetails = ({ t }) => {
         }
 
         if (bookingMode === 'hour') {
+            const hourlyRate = getRateForMode('hour');
             const hours = Number(hourCount) > 0 ? Number(hourCount) : 0;
             const baseCost = hours * hourlyRate;
             const platformFee = Math.round(baseCost * 0.05);
@@ -127,25 +149,37 @@ const EquipmentDetails = ({ t }) => {
             };
         }
 
-        const acres = Number(acreCount) > 0 ? Number(acreCount) : 0;
-        const baseCost = acres * acreRate;
+        const selectedRate = getRateForMode(bookingMode);
+        const quantity = Number(unitCount) > 0 ? Number(unitCount) : 0;
+        const baseCost = quantity * selectedRate;
         const platformFee = Math.round(baseCost * 0.05);
         return {
-            bookingType: 'acre',
-            quantity: acres,
-            selectedRate: acreRate,
-            startDate: acreDate || null,
-            endDate: acreDate || null,
+            bookingType: bookingMode,
+            quantity,
+            selectedRate,
+            startDate: unitDate || null,
+            endDate: unitDate || null,
             hoursBooked: null,
             daysBooked: null,
-            acresBooked: acres || null,
+            acresBooked: bookingMode === 'acre' ? quantity || null : null,
             extraMessage: '',
             baseCost,
             travelCost: 0,
             platformFee,
             totalCost: baseCost + platformFee,
         };
-    }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, acreDate, acreCount, dayRate, hourlyRate, acreRate]);
+    }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, unitDate, unitCount, rateCard]);
+
+    const modeLabels = {
+        day: 'Day',
+        hour: 'Hour',
+        acre: 'Acre',
+        distance: 'Distance (km)',
+        liter: 'Liter',
+        kg: 'Kg',
+        ton: 'Ton',
+        quintal: 'Quintal',
+    };
 
     const getWhatsAppPhone = (phone) => {
         const digits = String(phone || '').replace(/\D/g, '');
@@ -202,8 +236,8 @@ const EquipmentDetails = ({ t }) => {
             if (!Number.isFinite(Number(hourCount)) || Number(hourCount) <= 0) return 'Please enter valid hours.';
             return '';
         }
-        if (!acreDate) return 'Please select booking date.';
-        if (!Number.isFinite(Number(acreCount)) || Number(acreCount) <= 0) return 'Please enter valid acres.';
+        if (!unitDate) return 'Please select booking date.';
+        if (!Number.isFinite(Number(unitCount)) || Number(unitCount) <= 0) return `Please enter valid ${modeLabels[bookingMode]?.toLowerCase() || 'quantity'}.`;
         return '';
     };
 
@@ -243,7 +277,7 @@ const EquipmentDetails = ({ t }) => {
             bookingType: item.listingType === 'rent' ? computed.bookingType : null,
             startDate: item.listingType === 'rent' ? computed.startDate : null,
             endDate: item.listingType === 'rent' ? computed.endDate : null,
-            hoursBooked: item.listingType === 'rent' ? computed.hoursBooked : null,
+            hoursBooked: item.listingType === 'rent' ? (computed.bookingType === 'hour' ? computed.quantity : null) : null,
             daysBooked: item.listingType === 'rent' ? computed.daysBooked : null,
             acresBooked: item.listingType === 'rent' ? computed.acresBooked : null,
             baseCost: item.listingType === 'rent' ? computed.baseCost : Number(item.sellPrice) || 0,
@@ -288,7 +322,8 @@ const EquipmentDetails = ({ t }) => {
         );
     }
 
-    const displayPrice = item.listingType === 'rent' ? hourlyRate : item.sellPrice;
+    const primaryMode = availableBookingModes[0];
+    const displayPrice = item.listingType === 'rent' ? getRateForMode(primaryMode) : item.sellPrice;
 
     return (
         <MobileLayout t={t}>
@@ -320,7 +355,7 @@ const EquipmentDetails = ({ t }) => {
                     <div className="text-right">
                         <p className="text-2xl font-black text-green-700">Rs {displayPrice}</p>
                         <p className="text-[10px] text-gray-400 font-bold uppercase">
-                            {item.listingType === 'rent' ? '/ hour' : t('price_on_sale')}
+                            {item.listingType === 'rent' ? `/ ${primaryMode || 'unit'}` : t('price_on_sale')}
                         </p>
                     </div>
                 </div>
@@ -369,15 +404,15 @@ const EquipmentDetails = ({ t }) => {
                         <>
                             <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
                                 <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Booking Type</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['day', 'hour', 'acre'].map((mode) => (
+                                <div className="grid grid-cols-2 gap-2">
+                                    {availableBookingModes.map((mode) => (
                                         <button
                                             key={mode}
                                             type="button"
                                             onClick={() => setBookingMode(mode)}
                                             className={`p-2 rounded-lg text-xs font-bold border ${bookingMode === mode ? 'bg-green-600 text-white border-green-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
                                         >
-                                            By {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                            By {modeLabels[mode] || mode}
                                         </button>
                                     ))}
                                 </div>
@@ -404,12 +439,12 @@ const EquipmentDetails = ({ t }) => {
                                 </div>
                             )}
 
-                            {bookingMode === 'acre' && (
+                            {bookingMode !== 'day' && bookingMode !== 'hour' && (
                                 <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
-                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By Acre</p>
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By {modeLabels[bookingMode] || bookingMode}</p>
                                     <div className="grid grid-cols-2 gap-2">
-                                        <input type="date" value={acreDate} onChange={(e) => setAcreDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
-                                        <input type="number" min="1" value={acreCount} onChange={(e) => setAcreCount(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder="Acres" />
+                                        <input type="date" value={unitDate} onChange={(e) => setUnitDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
+                                        <input type="number" min="1" value={unitCount} onChange={(e) => setUnitCount(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder={modeLabels[bookingMode] || 'Quantity'} />
                                     </div>
                                 </div>
                             )}
@@ -461,4 +496,3 @@ const EquipmentDetails = ({ t }) => {
 };
 
 export default EquipmentDetails;
-
