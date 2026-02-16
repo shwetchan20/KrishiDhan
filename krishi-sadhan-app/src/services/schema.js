@@ -86,6 +86,8 @@ export const validateListingPayload = (input) => {
 
 export const validateRequestPayload = (input) => {
     const requestType = asTrimmed(input?.requestType);
+    const bookingType = input?.bookingType == null ? null : asTrimmed(input?.bookingType);
+    const asOptionalNumber = (value) => (value == null ? null : asNumber(value));
 
     const payload = {
         id: asTrimmed(input?.id),
@@ -93,9 +95,20 @@ export const validateRequestPayload = (input) => {
         ownerId: asTrimmed(input?.ownerId),
         renterId: asTrimmed(input?.renterId),
         requestType,
+        bookingType,
         startDate: input?.startDate ?? null,
         endDate: input?.endDate ?? null,
-        message: asTrimmed(input?.message),
+        hoursBooked: asOptionalNumber(input?.hoursBooked),
+        acresBooked: asOptionalNumber(input?.acresBooked),
+        daysBooked: asOptionalNumber(input?.daysBooked),
+        baseCost: asOptionalNumber(input?.baseCost),
+        travelCost: asOptionalNumber(input?.travelCost),
+        platformFee: asOptionalNumber(input?.platformFee),
+        totalCost: asOptionalNumber(input?.totalCost),
+        farmerMessage: asTrimmed(input?.farmerMessage),
+        ownerResponse: asTrimmed(input?.ownerResponse),
+        paymentStatus: asTrimmed(input?.paymentStatus) || 'pending',
+        message: asTrimmed(input?.message), // backward-compatible field
         status: asTrimmed(input?.status) || 'pending',
     };
 
@@ -111,11 +124,25 @@ export const validateRequestPayload = (input) => {
         if (!isNonEmptyString(payload.startDate) || !isNonEmptyString(payload.endDate)) {
             return fail(ServiceErrorCode.VALIDATION_ERROR, 'startDate and endDate are required for rent requests');
         }
+        if (!['hour', 'day', 'acre'].includes(payload.bookingType)) {
+            return fail(ServiceErrorCode.VALIDATION_ERROR, 'bookingType must be hour/day/acre for rent requests');
+        }
+        if (!Number.isFinite(payload.totalCost) || payload.totalCost <= 0) {
+            return fail(ServiceErrorCode.VALIDATION_ERROR, 'totalCost is required for rent requests');
+        }
     }
 
     if (payload.requestType === 'buy') {
+        payload.bookingType = null;
         payload.startDate = null;
         payload.endDate = null;
+        payload.hoursBooked = null;
+        payload.acresBooked = null;
+        payload.daysBooked = null;
+    }
+
+    if (!['pending', 'paid', 'cod'].includes(payload.paymentStatus)) {
+        return fail(ServiceErrorCode.VALIDATION_ERROR, 'paymentStatus must be pending/paid/cod');
     }
 
     return { ok: true, data: payload };

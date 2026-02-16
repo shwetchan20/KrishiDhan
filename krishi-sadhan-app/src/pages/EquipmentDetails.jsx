@@ -1,78 +1,464 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, MessageCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, ShieldCheck, Trash2 } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
+import { createRequest, deleteListing, getListingById, getRentRateByCategory, getUser } from '../services';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const EquipmentDetails = ({ t }) => {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    const item = {
-        title: "Mahindra 475 DI",
-        listingType: "rent",
-        price: 800,
-        city: "Kolhapur",
-        owner: "Suresh Patil",
-        description: "Well maintained Mahindra tractor, 42 HP. Ideal for plowing and heavy haulage.",
-        specs: ["42 HP Engine", "8 Forward Gears", "Oil Immersed Brakes"],
-        images: ["https://placehold.co/600x400?text=Tractor+View"]
+    const [item, setItem] = useState(null);
+    const [ownerName, setOwnerName] = useState('Owner');
+    const [ownerPhone, setOwnerPhone] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    const [bookingMode, setBookingMode] = useState('day');
+    const [dayStartDate, setDayStartDate] = useState('');
+    const [dayEndDate, setDayEndDate] = useState('');
+    const [hourDate, setHourDate] = useState('');
+    const [hourStartTime, setHourStartTime] = useState('');
+    const [hourCount, setHourCount] = useState(1);
+    const [acreDate, setAcreDate] = useState('');
+    const [acreCount, setAcreCount] = useState(1);
+    const [requestMessage, setRequestMessage] = useState('');
+
+    const currentUid = localStorage.getItem('kd_uid') || '';
+    const isOwner = !!item && currentUid === item.ownerId;
+
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true);
+            const result = await getListingById(id);
+            setLoading(false);
+
+            if (!result.ok) {
+                setError(result.message || 'Listing not found');
+                return;
+            }
+
+            setItem(result.data);
+
+            if (result.data?.ownerId) {
+                const owner = await getUser(result.data.ownerId);
+                if (owner.ok) {
+                    setOwnerName(owner.data?.name || 'Owner');
+                    setOwnerPhone(owner.data?.phone || '');
+                }
+            }
+        };
+
+        load();
+    }, [id]);
+
+    const rateCard = getRentRateByCategory(item?.category);
+    const hourlyRate = Number(item?.pricePerDay) || Number(rateCard.hour);
+    const dayRate = Math.round(hourlyRate * 8);
+    const acreRate = Number(rateCard.acre);
+
+    const computed = useMemo(() => {
+        if (!item || item.listingType !== 'rent') {
+            const amount = Number(item?.sellPrice) || 0;
+            return {
+                bookingType: null,
+                quantity: 0,
+                selectedRate: 0,
+                startDate: null,
+                endDate: null,
+                hoursBooked: null,
+                daysBooked: null,
+                acresBooked: null,
+                extraMessage: '',
+                baseCost: amount,
+                travelCost: 0,
+                platformFee: 0,
+                totalCost: amount,
+            };
+        }
+
+        if (bookingMode === 'day') {
+            const start = dayStartDate ? new Date(dayStartDate) : null;
+            const end = dayEndDate ? new Date(dayEndDate) : null;
+            const validRange = start && end && end >= start;
+            const days = validRange ? Math.floor((end.getTime() - start.getTime()) / DAY_MS) + 1 : 0;
+            const baseCost = days * dayRate;
+            const platformFee = Math.round(baseCost * 0.05);
+            return {
+                bookingType: 'day',
+                quantity: days,
+                selectedRate: dayRate,
+                startDate: dayStartDate || null,
+                endDate: dayEndDate || null,
+                hoursBooked: null,
+                daysBooked: days || null,
+                acresBooked: null,
+                extraMessage: '',
+                baseCost,
+                travelCost: 0,
+                platformFee,
+                totalCost: baseCost + platformFee,
+            };
+        }
+
+        if (bookingMode === 'hour') {
+            const hours = Number(hourCount) > 0 ? Number(hourCount) : 0;
+            const baseCost = hours * hourlyRate;
+            const platformFee = Math.round(baseCost * 0.05);
+            return {
+                bookingType: 'hour',
+                quantity: hours,
+                selectedRate: hourlyRate,
+                startDate: hourDate || null,
+                endDate: hourDate || null,
+                hoursBooked: hours || null,
+                daysBooked: null,
+                acresBooked: null,
+                extraMessage: hourStartTime ? `Start time: ${hourStartTime}` : '',
+                baseCost,
+                travelCost: 0,
+                platformFee,
+                totalCost: baseCost + platformFee,
+            };
+        }
+
+        const acres = Number(acreCount) > 0 ? Number(acreCount) : 0;
+        const baseCost = acres * acreRate;
+        const platformFee = Math.round(baseCost * 0.05);
+        return {
+            bookingType: 'acre',
+            quantity: acres,
+            selectedRate: acreRate,
+            startDate: acreDate || null,
+            endDate: acreDate || null,
+            hoursBooked: null,
+            daysBooked: null,
+            acresBooked: acres || null,
+            extraMessage: '',
+            baseCost,
+            travelCost: 0,
+            platformFee,
+            totalCost: baseCost + platformFee,
+        };
+    }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, acreDate, acreCount, dayRate, hourlyRate, acreRate]);
+
+    const getWhatsAppPhone = (phone) => {
+        const digits = String(phone || '').replace(/\D/g, '');
+        if (!digits) return '';
+        if (digits.length === 10) return `91${digits}`;
+        return digits;
     };
 
-    return (
-        <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    const handleWhatsAppBooking = () => {
+        if (!item) return;
+
+        const whatsappPhone = getWhatsAppPhone(ownerPhone);
+        if (!whatsappPhone) {
+            setError('Owner phone is not available for WhatsApp.');
+            return;
+        }
+
+        const renter = JSON.parse(localStorage.getItem('kd_user') || '{}');
+        const renterName = renter?.name || 'Customer';
+        const text = item.listingType === 'rent'
+            ? `Hello, I want to book ${item.title}. Type: ${computed.bookingType}, Qty: ${computed.quantity}, Total: Rs ${computed.totalCost}. My name is ${renterName}.`
+            : `Hello, I want to buy ${item.title}. My name is ${renterName}.`;
+        const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
+
+    const handleDeleteListing = async () => {
+        if (!item || !isOwner) return;
+        const confirmed = window.confirm('Delete this listing? This action cannot be undone.');
+        if (!confirmed) return;
+
+        setDeleting(true);
+        const result = await deleteListing({ listingId: item.id, actorId: currentUid });
+        setDeleting(false);
+
+        if (!result.ok) {
+            setError(result.message || 'Failed to delete listing');
+            return;
+        }
+
+        navigate('/home');
+    };
+
+    const validateRentInputs = () => {
+        if (bookingMode === 'day') {
+            if (!dayStartDate || !dayEndDate) return 'Please select start and end date.';
+            if (new Date(dayEndDate) < new Date(dayStartDate)) return 'End date cannot be before start date.';
+            if (computed.quantity <= 0) return 'Please select a valid day range.';
+            return '';
+        }
+        if (bookingMode === 'hour') {
+            if (!hourDate) return 'Please select booking date.';
+            if (!hourStartTime) return 'Please select start time.';
+            if (!Number.isFinite(Number(hourCount)) || Number(hourCount) <= 0) return 'Please enter valid hours.';
+            return '';
+        }
+        if (!acreDate) return 'Please select booking date.';
+        if (!Number.isFinite(Number(acreCount)) || Number(acreCount) <= 0) return 'Please enter valid acres.';
+        return '';
+    };
+
+    const handleCreateRequest = async () => {
+        if (!item) return;
+
+        const renterId = localStorage.getItem('kd_uid');
+        if (!renterId) {
+            navigate('/login');
+            return;
+        }
+        if (renterId === item.ownerId) {
+            setError('You cannot request your own listing.');
+            return;
+        }
+
+        if (item.listingType === 'rent') {
+            const validationMessage = validateRentInputs();
+            if (validationMessage) {
+                setError(validationMessage);
+                return;
+            }
+        }
+
+        setError('');
+        setSuccess('');
+        setSubmitting(true);
+
+        const bookingSummary = item.listingType === 'rent'
+            ? `Type:${computed.bookingType}, Qty:${computed.quantity}, Base:${computed.baseCost}, Platform:${computed.platformFee}, Total:${computed.totalCost}`
+            : '';
+        const result = await createRequest({
+            listingId: item.id,
+            ownerId: item.ownerId,
+            renterId,
+            requestType: item.listingType === 'rent' ? 'rent' : 'buy',
+            bookingType: item.listingType === 'rent' ? computed.bookingType : null,
+            startDate: item.listingType === 'rent' ? computed.startDate : null,
+            endDate: item.listingType === 'rent' ? computed.endDate : null,
+            hoursBooked: item.listingType === 'rent' ? computed.hoursBooked : null,
+            daysBooked: item.listingType === 'rent' ? computed.daysBooked : null,
+            acresBooked: item.listingType === 'rent' ? computed.acresBooked : null,
+            baseCost: item.listingType === 'rent' ? computed.baseCost : Number(item.sellPrice) || 0,
+            travelCost: item.listingType === 'rent' ? computed.travelCost : 0,
+            platformFee: item.listingType === 'rent' ? computed.platformFee : 0,
+            totalCost: item.listingType === 'rent' ? computed.totalCost : Number(item.sellPrice) || 0,
+            farmerMessage: [requestMessage, computed.extraMessage].filter(Boolean).join(' | '),
+            message: [requestMessage, computed.extraMessage, bookingSummary].filter(Boolean).join(' | '),
+            paymentStatus: 'pending',
+            status: 'pending',
+        });
+        setSubmitting(false);
+
+        if (!result.ok) {
+            setError(result.message || 'Failed to create request');
+            return;
+        }
+
+        setSuccess(item.listingType === 'rent'
+            ? 'Booking request sent. Wait for owner approval in My Orders.'
+            : 'Purchase request sent. Wait for owner approval in My Orders.');
+    };
+
+    if (loading) {
+        return (
             <MobileLayout t={t}>
-                <div className="pb-24">
-                    <div className="flex items-center gap-4 mb-4">
-                        <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm border">
-                            <ArrowLeft size={20} className="text-green-700" />
-                        </button>
-                        <h2 className="font-bold text-gray-800 truncate">{item.title}</h2>
-                    </div>
+                <div className="p-4 text-sm text-gray-500">{t('loading') || 'Loading...'}</div>
+            </MobileLayout>
+        );
+    }
 
-                    <div className="relative w-full h-64 bg-gray-200 rounded-3xl overflow-hidden mb-6 shadow-md">
-                        <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" />
-                        <div className="absolute top-4 left-4">
-                            <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase text-white ${item.listingType === 'rent' ? 'bg-green-600' : 'bg-orange-500'}`}>
-                                {item.listingType === 'rent' ? t('rent_badge') : t('sell_badge')}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="px-2 mb-6 flex justify-between items-start">
-                        <div>
-                            <h1 className="text-2xl font-black text-gray-800">{item.title}</h1>
-                            <div className="flex items-center gap-1 text-gray-400 text-sm mt-1">
-                                <MapPin size={14} />
-                                <span>{item.city}</span>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-black text-green-700">₹{item.price}</p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">
-                                {item.listingType === 'rent' ? t('per_day') : t('price_on_sale')}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold">
-                                {item.owner.charAt(0)}
-                            </div>
-                            <div>
-                                <p className="text-[9px] text-gray-400 font-bold uppercase">Owner</p>
-                                <p className="font-bold text-gray-800 text-sm">{item.owner}</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <button className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Phone size={18} /></button>
-                            <button className="p-2 bg-green-50 text-green-600 rounded-lg"><MessageCircle size={18} /></button>
-                        </div>
-                    </div>
+    if (error && !item) {
+        return (
+            <MobileLayout t={t}>
+                <div className="p-4">
+                    <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm mb-4 border">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <p className="text-sm text-red-500">{error}</p>
                 </div>
             </MobileLayout>
-        </div>
+        );
+    }
+
+    const displayPrice = item.listingType === 'rent' ? hourlyRate : item.sellPrice;
+
+    return (
+        <MobileLayout t={t}>
+            <div className="pb-24">
+                <div className="flex items-center gap-4 mb-4">
+                    <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm border">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <h2 className="font-bold text-gray-800 truncate">{item.title}</h2>
+                </div>
+
+                <div className="relative w-full h-64 bg-gray-200 rounded-3xl overflow-hidden mb-6 shadow-md">
+                    <img src={item.images?.[0] || 'https://placehold.co/600x400?text=No+Image'} alt={item.title} className="w-full h-full object-cover" />
+                    <div className="absolute top-4 left-4">
+                        <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase text-white ${item.listingType === 'rent' ? 'bg-blue-600' : 'bg-red-500'}`}>
+                            {item.listingType === 'rent' ? t('rent_badge') : t('sell_badge')}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="px-2 mb-6 flex justify-between items-start">
+                    <div>
+                        <h1 className="text-2xl font-black text-gray-800">{item.title}</h1>
+                        <div className="flex items-center gap-1 text-gray-400 text-sm mt-1">
+                            <MapPin size={14} />
+                            <span>{item.city}</span>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-2xl font-black text-green-700">Rs {displayPrice}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase">
+                            {item.listingType === 'rent' ? '/ hour' : t('price_on_sale')}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold">
+                            {ownerName.charAt(0)}
+                        </div>
+                        <div>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">Owner</p>
+                            <p className="font-bold text-gray-800 text-sm">{ownerName}</p>
+                        </div>
+                    </div>
+                    {isOwner && (
+                        <button
+                            onClick={handleDeleteListing}
+                            disabled={deleting}
+                            className="text-xs px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-100 font-bold disabled:opacity-60 flex items-center gap-1"
+                        >
+                            <Trash2 size={14} />
+                            {deleting ? 'Deleting...' : 'Delete Listing'}
+                        </button>
+                    )}
+                </div>
+
+                <div className="px-2 mb-6">
+                    <h3 className="font-black text-gray-800 mb-2 uppercase text-xs tracking-widest">{t('description')}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
+                </div>
+
+                <div className="px-2 mb-8">
+                    <h3 className="font-black text-gray-800 mb-3 uppercase text-xs tracking-widest">Specifications</h3>
+                    <div className="grid grid-cols-1 gap-2">
+                        {[`Category: ${item.category}`, `Location: ${item.city}`].map((spec, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded-xl font-medium">
+                                <ShieldCheck size={16} className="text-green-600" />
+                                {spec}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="px-2 mb-32">
+                    {item.listingType === 'rent' && (
+                        <>
+                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
+                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Booking Type</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['day', 'hour', 'acre'].map((mode) => (
+                                        <button
+                                            key={mode}
+                                            type="button"
+                                            onClick={() => setBookingMode(mode)}
+                                            className={`p-2 rounded-lg text-xs font-bold border ${bookingMode === mode ? 'bg-green-600 text-white border-green-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                                        >
+                                            By {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {bookingMode === 'day' && (
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By Day</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input type="date" value={dayStartDate} onChange={(e) => setDayStartDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
+                                        <input type="date" value={dayEndDate} onChange={(e) => setDayEndDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {bookingMode === 'hour' && (
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By Hour</p>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <input type="date" value={hourDate} onChange={(e) => setHourDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
+                                        <input type="time" value={hourStartTime} onChange={(e) => setHourStartTime(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
+                                        <input type="number" min="1" value={hourCount} onChange={(e) => setHourCount(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder="Hours" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {bookingMode === 'acre' && (
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By Acre</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input type="date" value={acreDate} onChange={(e) => setAcreDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
+                                        <input type="number" min="1" value={acreCount} onChange={(e) => setAcreCount(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder="Acres" />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
+                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Fare Estimate</p>
+                                <div className="text-[11px] text-gray-600 space-y-1">
+                                    <p>Rate: Rs {computed.selectedRate}/{computed.bookingType || '-'}</p>
+                                    <p>Quantity: {computed.quantity || 0}</p>
+                                    <p>Base Cost: Rs {computed.baseCost}</p>
+                                    <p>Platform Fee (5%): Rs {computed.platformFee}</p>
+                                    <p className="font-bold text-green-700">Estimated Total: Rs {computed.totalCost}</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                        <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Message (Optional)</p>
+                        <textarea
+                            value={requestMessage}
+                            onChange={(e) => setRequestMessage(e.target.value)}
+                            rows="3"
+                            className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                            placeholder="Add request note..."
+                        />
+                    </div>
+                    {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+                    {success && <p className="text-green-600 text-xs mt-2">{success}</p>}
+                </div>
+
+                {!isOwner && (
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 px-6 flex items-center gap-3 z-50">
+                        <div className="flex-1">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase leading-none">Total Price</p>
+                            <p className="text-xl font-black text-gray-800">Rs {item.listingType === 'rent' ? computed.totalCost : displayPrice}</p>
+                        </div>
+                        <button onClick={handleWhatsAppBooking} className="flex-[1.1] bg-[#25D366] text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all">
+                            WhatsApp
+                        </button>
+                        <button onClick={handleCreateRequest} disabled={submitting} className="flex-[1.5] bg-green-700 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all disabled:opacity-60">
+                            {submitting ? 'Please wait...' : item.listingType === 'rent' ? 'Send Booking Request' : 'Send Purchase Request'}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </MobileLayout>
     );
 };
 
 export default EquipmentDetails;
+

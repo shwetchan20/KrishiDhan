@@ -1,5 +1,6 @@
 import {
     collection,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -118,5 +119,29 @@ export async function getListingById(id) {
         return ok({ id: snap.id, ...snap.data() });
     } catch (error) {
         return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to fetch listing', toErrorDetails(error));
+    }
+}
+
+export async function deleteListing({ listingId, actorId }) {
+    if (!listingId || !actorId) {
+        return fail(ServiceErrorCode.VALIDATION_ERROR, 'listingId and actorId are required');
+    }
+
+    try {
+        const listingRef = doc(db, LISTINGS_COLLECTION, listingId);
+        const snap = await getDoc(listingRef);
+        if (!snap.exists()) {
+            return fail(ServiceErrorCode.NOT_FOUND, 'Listing not found', { listingId });
+        }
+
+        const listing = snap.data();
+        if (listing.ownerId !== actorId) {
+            return fail(ServiceErrorCode.AUTH_ERROR, 'Only owner can delete listing');
+        }
+
+        await deleteDoc(listingRef);
+        return ok({ id: listingId, deleted: true });
+    } catch (error) {
+        return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to delete listing', toErrorDetails(error));
     }
 }

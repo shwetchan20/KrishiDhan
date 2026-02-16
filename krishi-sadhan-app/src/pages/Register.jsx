@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { registerWithEmail } from '../services';
 
 const Register = ({ t }) => {
     const navigate = useNavigate();
 
-    // Form state handling basic user schema - Full Data Preserved
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -13,34 +13,48 @@ const Register = ({ t }) => {
         password: '',
         confirmPassword: ''
     });
-    const [error, setError] = useState("");
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError("");
+        setError('');
     };
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
 
-        // Basic password validation logic
         if (formData.password !== formData.confirmPassword) {
-            setError(t('passwords_not_match'));
+            setError(t('passwords_not_match') || 'Passwords do not match');
             return;
         }
 
-        console.log("Registering user:", formData);
-        alert("Registration Successful!");
+        setLoading(true);
+        const result = await registerWithEmail({
+            email: formData.email,
+            password: formData.password,
+            name: formData.name,
+            phone: formData.phone,
+            city: formData.city,
+            photoURL: '',
+            role: 'farmer',
+        });
+        setLoading(false);
+
+        if (!result.ok) {
+            setError(result.message || 'Registration failed');
+            return;
+        }
+
+        alert(t('alert_success') || 'Registration Successful');
         navigate('/login');
     };
 
     return (
-        /* Added the full Green-White Gradient background here */
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white px-6 py-10 font-sans">
+        <div className="min-h-screen flex items-center justify-center bg-white px-6 py-10 font-sans">
             <div className="w-full max-w-sm">
 
                 <div className="text-center mb-8">
-                    {/* Centered Brand Logo */}
                     <img
                         src="/logo.jpeg"
                         alt="KrishiDhan Logo"
@@ -57,96 +71,84 @@ const Register = ({ t }) => {
                 )}
 
                 <form className="space-y-4" onSubmit={handleRegister}>
-                    {/* Full Name Field */}
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('full_name')}</label>
                         <input
                             type="text"
                             name="name"
-                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors bg-transparent"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
                             placeholder="John Doe"
-                            value={formData.name}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
-                    {/* Email Address Field */}
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('email_address')}</label>
                         <input
                             type="email"
                             name="email"
-                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors bg-transparent"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
                             placeholder="name@example.com"
-                            value={formData.email}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
-                    {/* Phone Number Field */}
                     <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('phone_label')}</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('mobile_label') || t('phone_label') || 'Phone'}</label>
                         <input
                             type="tel"
                             name="phone"
-                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors bg-transparent"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
                             placeholder="9876543210"
-                            value={formData.phone}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
-                    {/* City Field */}
                     <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('city_label')}</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('city_village') || t('city_label') || 'City'}</label>
                         <input
                             type="text"
                             name="city"
-                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors bg-transparent"
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
                             placeholder="Kolhapur"
-                            value={formData.city}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
-                    {/* Password Field */}
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('password')}</label>
                         <input
                             type="password"
                             name="password"
-                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors bg-transparent"
-                            placeholder="••••••••"
-                            value={formData.password}
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="........"
                             onChange={handleChange}
                             required
                         />
                     </div>
 
-                    {/* Confirm Password Field */}
                     <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">{t('confirm_password')}</label>
                         <input
                             type="password"
                             name="confirmPassword"
-                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors bg-transparent"
-                            placeholder="••••••••"
-                            value={formData.confirmPassword}
+                            className="w-full border-b py-2 outline-none focus:border-green-700 font-medium transition-colors"
+                            placeholder="........"
                             onChange={handleChange}
                             required
                         />
                     </div>
 
-                    {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-green-700 text-white font-black py-4 rounded-xl mt-4 shadow-lg active:scale-95 transition-all"
+                        disabled={loading}
+                        className="w-full bg-green-700 text-white font-black py-4 rounded-xl mt-4 shadow-lg active:scale-95 transition-all disabled:opacity-60"
                     >
-                        {t('register').toUpperCase()}
+                        {loading ? (t('loading') || 'Loading...') : t('register').toUpperCase()}
                     </button>
                 </form>
 
