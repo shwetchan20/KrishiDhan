@@ -19,6 +19,7 @@ const Profile = ({ t, setLang, currentLang }) => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [hasListings, setHasListings] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -90,6 +91,7 @@ const Profile = ({ t, setLang, currentLang }) => {
 
         localStorage.setItem('kd_user', JSON.stringify(result.data));
         setMessage('Profile updated successfully');
+        setIsEditing(false);
     };
 
     const onLogout = async () => {
@@ -118,46 +120,66 @@ const Profile = ({ t, setLang, currentLang }) => {
                     </div>
 
                     <div className="relative z-10 w-full">
-                        <input
-                            value={user.name}
-                            onChange={(e) => onChange('name', e.target.value)}
-                            className="text-xl font-black text-gray-800 bg-transparent text-center w-full outline-none"
-                            placeholder="Name"
-                        />
-                        <div className="flex items-center justify-center gap-4 mt-2 text-sm text-gray-500 font-medium">
-                            <span className="flex items-center gap-1"><Phone size={14} /></span>
-                            <input
-                                value={user.phone}
-                                onChange={(e) => onChange('phone', e.target.value)}
-                                className="bg-transparent text-center outline-none"
-                                placeholder="Phone"
-                            />
-                        </div>
-                        <div className="flex items-center justify-center gap-1 mt-1 text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full inline-flex mx-auto">
-                            <MapPin size={12} />
-                            <input
-                                value={user.city}
-                                onChange={(e) => onChange('city', e.target.value)}
-                                className="bg-transparent text-center outline-none w-28"
-                                placeholder="City"
-                            />
-                        </div>
-
-                        <div className="mt-3">
-                            <button
-                                onClick={onSave}
-                                disabled={saving || loading}
-                                className="bg-green-700 text-white text-xs px-4 py-2 rounded-lg font-bold disabled:opacity-60"
-                            >
-                                {saving ? (t('loading') || 'Loading...') : 'Save Profile'}
-                            </button>
-                            {message && <p className="text-[10px] text-gray-500 mt-2">{message}</p>}
-                        </div>
+                        {isEditing ? (
+                            <div className="space-y-3">
+                                <input
+                                    value={user.name}
+                                    onChange={(e) => onChange('name', e.target.value)}
+                                    className="text-xl font-black text-gray-800 bg-transparent text-center w-full outline-none border-b border-gray-200 pb-1"
+                                    placeholder="Name"
+                                />
+                                <div className="flex items-center justify-center gap-2 text-sm text-gray-500 font-medium border-b border-gray-200 pb-1">
+                                    <Phone size={14} />
+                                    <input
+                                        value={user.phone}
+                                        onChange={(e) => onChange('phone', e.target.value)}
+                                        className="bg-transparent text-center outline-none"
+                                        placeholder="Phone"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-center gap-2 text-sm text-gray-500 font-medium border-b border-gray-200 pb-1">
+                                    <MapPin size={14} />
+                                    <input
+                                        value={user.city}
+                                        onChange={(e) => onChange('city', e.target.value)}
+                                        className="bg-transparent text-center outline-none"
+                                        placeholder="City"
+                                    />
+                                </div>
+                                <button
+                                    onClick={onSave}
+                                    disabled={saving || loading}
+                                    className="w-full bg-green-700 text-white text-xs px-4 py-2 rounded-lg font-bold disabled:opacity-60 uppercase"
+                                >
+                                    {saving ? (t('loading') || 'Loading...') : (t('save_profile') || 'Save Profile')}
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center">
+                                <h2 className="text-2xl font-black text-gray-800">{user.name || t('user_name') || 'User Name'}</h2>
+                                <p className="text-gray-500 font-medium mt-1 flex items-center gap-1">
+                                    <Phone size={14} /> {user.phone || '0000000000'}
+                                </p>
+                                <div className="mt-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold flex items-center gap-1">
+                                    <MapPin size={12} /> {user.city || 'Location'}
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setIsEditing(true);
+                                        setMessage('');
+                                    }}
+                                    className="mt-3 flex items-center gap-1 text-green-700 text-xs font-black uppercase tracking-wider"
+                                >
+                                    <Edit2 size={12} /> {t('edit') || 'Edit'}
+                                </button>
+                            </div>
+                        )}
+                        {message && <p className="text-[10px] text-gray-500 mt-2">{message}</p>}
                     </div>
                 </div>
 
                 <div className="space-y-3 px-1">
-                    {hasListings && (
+                    {(hasListings || user.role === 'owner') && (
                         <button
                             onClick={() => navigate('/my-listings')}
                             className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-98 transition-transform"
@@ -166,7 +188,7 @@ const Profile = ({ t, setLang, currentLang }) => {
                                 <div className="bg-green-50 p-2.5 rounded-xl text-green-600">
                                     <PackageOpen size={20} />
                                 </div>
-                                <span className="font-bold text-gray-700">My Listings</span>
+                                <span className="font-bold text-gray-700">{t('my_listed_tools') || 'My Listings'}</span>
                             </div>
                             <ChevronRight size={20} className="text-gray-300" />
                         </button>
@@ -200,7 +222,7 @@ const Profile = ({ t, setLang, currentLang }) => {
                                     onClick={() => setLang(l)}
                                     className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${currentLang === l ? 'bg-green-700 text-white border-green-700 shadow-md' : 'bg-gray-50 text-gray-500 border-gray-200'}`}
                                 >
-                                    {l === 'en' ? 'English' : l === 'hi' ? 'Hindi' : 'Marathi'}
+                                    {t(`lang_${l}`)}
                                 </button>
                             ))}
                         </div>
