@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Camera, IndianRupee, Tag, CheckCircle2 } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import { createListingFlow, getRentRateByCategory } from '../services';
+import { createListingFlow, getAllowedRentUnits, getRentRateByCategory } from '../services';
 
 const CITY_COORDINATES = {
     kolhapur: { lat: 16.705, lng: 74.2433 },
@@ -13,6 +13,17 @@ const CITY_COORDINATES = {
 };
 
 const getCoordinates = (city) => CITY_COORDINATES[(city || '').trim().toLowerCase()] || { lat: 0, lng: 0 };
+
+const CATEGORY_OPTIONS = [
+    { value: 'tractor', label: 'Tractor' },
+    { value: 'harvester', label: 'Harvester' },
+    { value: 'tools', label: 'Tools' },
+    { value: 'blower', label: 'Blower' },
+    { value: 'trolly', label: 'Trolly' },
+    { value: 'sowing_machine', label: 'Sowing Machine' },
+    { value: 'thresing_machine', label: 'Thresing Machine' },
+    { value: 'rotar', label: 'Rotar' },
+];
 
 const PostEquipment = ({ t }) => {
     const navigate = useNavigate();
@@ -32,6 +43,32 @@ const PostEquipment = ({ t }) => {
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const rentRate = getRentRateByCategory(formData.category);
+    const allowedRentUnits = getAllowedRentUnits(formData.category);
+    const availableCategories = CATEGORY_OPTIONS.filter((option) => {
+        if (type === 'rent') return option.value !== 'tractor';
+        return true;
+    });
+
+    const buildStandardRateRows = () => {
+        if (type !== 'rent' || !formData.category) return [];
+        return allowedRentUnits
+            .map((unit) => {
+                const value = rentRate[unit];
+                if (typeof value !== 'number') return null;
+                const labelMap = {
+                    hour: '/hour',
+                    acre: '/acre',
+                    liter: '/liter',
+                    distance: '/km',
+                    kg: '/kg',
+                    ton: '/ton',
+                    quintal: '/quintal',
+                };
+                return `Rs ${value}${labelMap[unit] || `/${unit}`}`;
+            })
+            .filter(Boolean);
+    };
+    const rateRows = buildStandardRateRows();
 
     useEffect(() => {
         const uid = localStorage.getItem('kd_uid');
@@ -69,8 +106,8 @@ const PostEquipment = ({ t }) => {
             lat: coords.lat,
             lng: coords.lng,
             listingType: type,
-            pricePerDay: type === 'rent' ? Number(rentRate.hour) : null,
-            priceUnit: type === 'rent' ? 'hour' : null,
+            pricePerDay: type === 'rent' ? Number(rentRate[allowedRentUnits[0]] || 0) : null,
+            priceUnit: type === 'rent' ? allowedRentUnits[0] || null : null,
             sellPrice: type === 'sell' ? Number(formData.price) : null,
             isAvailable: true,
         };
@@ -147,10 +184,11 @@ const PostEquipment = ({ t }) => {
                                 <Tag size={18} className="absolute left-4 top-4 text-gray-400" />
                                 <select className="w-full bg-white p-4 pl-11 rounded-2xl border border-gray-100 outline-none font-bold text-gray-800 appearance-none shadow-sm" required value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
                                     <option value="">{t('select_category')}</option>
-                                    <option value="tractor">Tractor</option>
-                                    <option value="harvester">Harvester</option>
-                                    <option value="tools">Tools</option>
-                                    <option value="seeds">Seeds</option>
+                                    {availableCategories.map((category) => (
+                                        <option key={category.value} value={category.value}>
+                                            {category.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -158,8 +196,15 @@ const PostEquipment = ({ t }) => {
                             <label className="text-xs font-black text-gray-400 uppercase ml-1">{type === 'rent' ? 'Standard App Rate' : t('price_sell')}</label>
                             {type === 'rent' ? (
                                 <div className="w-full bg-green-50 p-4 rounded-2xl border border-green-100 font-bold text-gray-800 shadow-sm">
-                                    <p className="text-sm">Rs {rentRate.hour}/hour</p>
-                                    <p className="text-xs text-gray-500 mt-1">Rs {rentRate.acre}/acre</p>
+                                    {rateRows.length === 0 && <p className="text-xs text-gray-500">Select category to view standard rate.</p>}
+                                    {rateRows.map((row, index) => (
+                                        <p key={row} className={index === 0 ? 'text-sm' : 'text-xs text-gray-500 mt-1'}>
+                                            {row}
+                                        </p>
+                                    ))}
+                                    {formData.category === 'blower' && (
+                                        <p className="text-[10px] text-gray-500 mt-1">Minimum: {rentRate.minLiter || 100} liter</p>
+                                    )}
                                     <p className="text-[10px] text-green-700 mt-2">Owner cannot edit this rate.</p>
                                 </div>
                             ) : (

@@ -67,8 +67,8 @@ export const validateListingPayload = (input) => {
         if (!Number.isFinite(payload.pricePerDay) || payload.pricePerDay <= 0) {
             return fail(ServiceErrorCode.VALIDATION_ERROR, 'pricePerDay is required for rent listings');
         }
-        if (!['hour', 'day'].includes(payload.priceUnit)) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'priceUnit must be hour or day for rent listings');
+        if (!['hour', 'day', 'acre', 'distance', 'liter', 'kg', 'ton', 'quintal'].includes(payload.priceUnit)) {
+            return fail(ServiceErrorCode.VALIDATION_ERROR, 'priceUnit is invalid for rent listings');
         }
         payload.sellPrice = null;
     }
@@ -124,8 +124,8 @@ export const validateRequestPayload = (input) => {
         if (!isNonEmptyString(payload.startDate) || !isNonEmptyString(payload.endDate)) {
             return fail(ServiceErrorCode.VALIDATION_ERROR, 'startDate and endDate are required for rent requests');
         }
-        if (!['hour', 'day', 'acre'].includes(payload.bookingType)) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'bookingType must be hour/day/acre for rent requests');
+        if (!['hour', 'day', 'acre', 'distance', 'liter', 'kg', 'ton', 'quintal'].includes(payload.bookingType)) {
+            return fail(ServiceErrorCode.VALIDATION_ERROR, 'bookingType is invalid for rent requests');
         }
         if (!Number.isFinite(payload.totalCost) || payload.totalCost <= 0) {
             return fail(ServiceErrorCode.VALIDATION_ERROR, 'totalCost is required for rent requests');

@@ -28,6 +28,7 @@ const Home = ({ t }) => {
     const [error, setError] = useState('');
     const [locationError, setLocationError] = useState('');
     const [locationStatus, setLocationStatus] = useState('idle');
+    const [liveCity, setLiveCity] = useState(() => localStorage.getItem('kd_live_city') || '');
     const [userCoords, setUserCoords] = useState(() => {
         try {
             const raw = localStorage.getItem('kd_user_coords');
@@ -172,7 +173,40 @@ const Home = ({ t }) => {
         detectCurrentLocation();
     }, []);
 
+    useEffect(() => {
+        const resolveCityFromCoords = async () => {
+            if (!userCoords?.lat || !userCoords?.lng) return;
+            try {
+                const endpoint = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(userCoords.lat)}&lon=${encodeURIComponent(userCoords.lng)}`;
+                const response = await fetch(endpoint, {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                const address = data?.address || {};
+                const detectedCity =
+                    address.city ||
+                    address.town ||
+                    address.village ||
+                    address.county ||
+                    '';
+
+                if (detectedCity) {
+                    setLiveCity(detectedCity);
+                    localStorage.setItem('kd_live_city', detectedCity);
+                }
+            } catch {
+                // keep existing fallback location text
+            }
+        };
+
+        resolveCityFromCoords();
+    }, [userCoords]);
+
     const locationLabel = useMemo(() => {
+        if (liveCity) return liveCity;
         try {
             const user = JSON.parse(localStorage.getItem('kd_user') || '{}');
             if (user?.city) return user.city;
@@ -183,7 +217,7 @@ const Home = ({ t }) => {
             return `${Number(userCoords.lat).toFixed(2)}, ${Number(userCoords.lng).toFixed(2)}`;
         }
         return t('city_village_name') || 'Location';
-    }, [userCoords, t]);
+    }, [liveCity, userCoords, t]);
 
     const filteredListings = useMemo(() => {
         let prepared = listings.map((item) => {
@@ -397,9 +431,6 @@ const Home = ({ t }) => {
                                         <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-500">
                                             <MapPin size={10} />
                                             <span>{item.city}</span>
-                                            {Number.isFinite(item.distanceKm) && (
-                                                <span className="text-green-700 font-semibold">{item.distanceKm.toFixed(1)} km</span>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -423,8 +454,46 @@ const Home = ({ t }) => {
                                 className="flex-1 bg-gray-50 rounded-2xl px-5 py-3 outline-none font-bold text-gray-800 placeholder:text-gray-400"
                             />
                         </div>
-                        <div className="p-6 text-center text-gray-400 font-bold">
-                            {searchQuery ? `Searching for "${searchQuery}"` : (t('search_modal_text') || 'Type to find equipment...')}
+                        <div className="p-4 overflow-y-auto">
+                            {searchQuery.trim() ? (
+                                filteredListings.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {filteredListings.slice(0, 30).map((item) => (
+                                            <button
+                                                key={item.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsSearchOpen(false);
+                                                    navigate(`/equipment/${item.id}`);
+                                                }}
+                                                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-white text-left"
+                                            >
+                                                <img
+                                                    src={item.images?.[0] || 'https://placehold.co/120x120?text=No+Image'}
+                                                    alt={item.title}
+                                                    className="w-14 h-14 rounded-xl object-cover bg-gray-100"
+                                                />
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-bold text-gray-800 truncate">{item.title}</p>
+                                                    <p className="text-[11px] text-gray-500 mt-0.5">{item.city}</p>
+                                                    <p className="text-xs font-black text-green-700 mt-1">
+                                                        Rs {item.listingType === 'rent' ? item.pricePerDay : item.sellPrice}
+                                                    </p>
+                                                </div>
+                                                <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${item.listingType === 'rent' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
+                                                    {item.listingType === 'rent' ? 'RENT' : 'SELL'}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-sm text-gray-500 font-semibold pt-6">No matching equipment found.</p>
+                                )
+                            ) : (
+                                <p className="text-center text-sm text-gray-400 font-semibold pt-6">
+                                    {t('search_modal_text') || 'Type to find equipment...'}
+                                </p>
+                            )}
                         </div>
                     </div>
                 )}
