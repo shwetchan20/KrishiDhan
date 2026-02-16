@@ -397,24 +397,38 @@ const Home = ({ t }) => {
                         <h3 className="text-lg font-black text-gray-900">{t('recommendations')}</h3>
                     </div>
 
-                    {loading && <p className="text-sm text-gray-500">{t('loading') || 'Loading...'}</p>}
+                    {loading && (
+                        <div className="grid grid-cols-2 gap-4">
+                            {[1, 2, 3, 4].map((n) => (
+                                <div key={n} className="bg-white rounded-[28px] overflow-hidden border border-gray-50 shadow-sm">
+                                    <div className="h-36 w-full skeleton-pulse"></div>
+                                    <div className="p-4 space-y-2">
+                                        <div className="h-3 w-3/4 skeleton-pulse rounded"></div>
+                                        <div className="h-4 w-1/2 skeleton-pulse rounded"></div>
+                                        <div className="h-2 w-full skeleton-pulse rounded"></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {!loading && error && <p className="text-sm text-red-500">{error}</p>}
 
                     {!loading && !error && (
                         <div className="grid grid-cols-2 gap-4">
-                            {filteredListings.map((item) => (
+                            {filteredListings.map((item, index) => (
                                 <div
                                     key={item.id}
                                     onClick={() => navigate(`/equipment/${item.id}`)}
-                                    className="bg-white rounded-[28px] overflow-hidden border border-gray-50 shadow-md shadow-gray-200/50 active:scale-95 transition-all cursor-pointer group"
+                                    style={{ animationDelay: `${index * 0.1}s`, opacity: 0 }}
+                                    className="bg-white rounded-[32px] overflow-hidden border border-gray-50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] active:scale-95 transition-all cursor-pointer group animate-fade-in-up"
                                 >
-                                    <div className="relative h-36 overflow-hidden">
+                                    <div className="relative h-40 overflow-hidden">
                                         <img
                                             src={item.images?.[0] || 'https://placehold.co/300x200?text=No+Image'}
                                             alt={item.title}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                         />
-                                        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shadow-sm text-white ${item.listingType === 'rent' ? 'bg-green-600' : 'bg-orange-500'}`}>
+                                        <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-wider shadow-sm text-white ${item.listingType === 'rent' ? 'bg-[#166534]' : 'bg-[#F59E0B]'}`}>
                                             {item.listingType === 'rent' ? t('rent_badge') : t('sell_badge')}
                                         </div>
                                     </div>
@@ -454,6 +468,8 @@ const Home = ({ t }) => {
                                 className="flex-1 bg-gray-50 rounded-2xl px-5 py-3 outline-none font-bold text-gray-800 placeholder:text-gray-400"
                             />
                         </div>
+                        <div className="p-6 text-center text-gray-400 font-bold">
+                            {searchQuery ? `${t('searching_for')} "${searchQuery}"` : (t('search_modal_text') || 'Type to find equipment...')}
                         <div className="p-4 overflow-y-auto">
                             {searchQuery.trim() ? (
                                 filteredListings.length > 0 ? (

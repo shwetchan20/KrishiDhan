@@ -23,7 +23,7 @@ const PostChoice = ({ t }) => {
                 </div>
 
                 <div className="flex flex-col gap-6">
-                    {/* Option: Rent - No Underscores */}
+                    {/* Option: Rent - Using proper translation key */}
                     <button
                         onClick={() => navigate('/post-equipment?type=rent')}
                         className="group relative overflow-hidden bg-green-600 rounded-3xl p-12 text-center shadow-xl active:scale-98 transition-all"
@@ -36,7 +36,7 @@ const PostChoice = ({ t }) => {
                         </div>
                     </button>
 
-                    {/* Option: Sell - No Underscores */}
+                    {/* Option: Sell - Using proper translation key */}
                     <button
                         onClick={() => navigate('/post-equipment?type=sell')}
                         className="group relative overflow-hidden bg-orange-500 rounded-3xl p-12 text-center shadow-xl active:scale-98 transition-all"

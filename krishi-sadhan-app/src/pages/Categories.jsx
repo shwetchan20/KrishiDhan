@@ -6,8 +6,14 @@ import MobileLayout from '../components/MobileLayout';
 const Categories = ({ t }) => {
     const navigate = useNavigate();
 
-    // Data for equipment categories
+    // Data for equipment categories - Updated with Translation Keys
     const categories = [
+        { id: 1, key: 'tractor', nameKey: 'tractors', icon: <Tractor size={28} />, color: 'bg-orange-50 text-orange-600 border-orange-100' },
+        { id: 2, key: 'harvester', nameKey: 'harvesters', icon: <Truck size={28} />, color: 'bg-green-50 text-green-600 border-green-100' },
+        { id: 3, key: 'tools', nameKey: 'farming_tools', icon: <Hammer size={28} />, color: 'bg-blue-50 text-blue-600 border-blue-100' },
+        { id: 4, key: 'seeds', nameKey: 'seeds', icon: <Sprout size={28} />, color: 'bg-yellow-50 text-yellow-600 border-yellow-100' },
+        { id: 5, key: 'irrigation', nameKey: 'irrigation', icon: <Droplets size={28} />, color: 'bg-cyan-50 text-cyan-600 border-cyan-100' },
+        { id: 6, key: 'tillage', nameKey: 'tillage', icon: <Shovel size={28} />, color: 'bg-purple-50 text-purple-600 border-purple-100' },
         { id: 1, key: 'tractor', name: 'Tractors', icon: <Tractor size={28} />, color: 'bg-orange-50 text-orange-600 border-orange-100', items: 'Live' },
         { id: 2, key: 'harvester', name: 'Harvesters', icon: <Truck size={28} />, color: 'bg-green-50 text-green-600 border-green-100', items: 'Live' },
         { id: 3, key: 'tools', name: 'Farming Tools', icon: <Hammer size={28} />, color: 'bg-blue-50 text-blue-600 border-blue-100', items: 'Live' },
@@ -25,7 +31,7 @@ const Categories = ({ t }) => {
                 <div className="flex justify-between items-end mb-6 px-1">
                     <div>
                         <h2 className="text-xl font-black text-gray-800">{t('category')}</h2>
-                        <p className="text-xs text-gray-400 font-medium mt-1">Explore equipment by type</p>
+                        <p className="text-xs text-gray-400 font-medium mt-1">{t('explore_by_type')}</p>
                     </div>
                 </div>
 
@@ -40,9 +46,9 @@ const Categories = ({ t }) => {
                             <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 border ${cat.color} group-hover:scale-110 transition-transform`}>
                                 {cat.icon}
                             </div>
-                            <h3 className="font-bold text-gray-800 text-sm">{cat.name}</h3>
+                            <h3 className="font-bold text-gray-800 text-sm">{t(cat.nameKey)}</h3>
                             <p className="text-[10px] text-gray-400 font-bold mt-1 bg-gray-50 px-2 py-0.5 rounded-full">
-                                {cat.items} Items
+                                {t('live_items')}
                             </p>
                         </div>
                     ))}

@@ -150,10 +150,10 @@ const MyOrders = ({ t }) => {
         return orders
             .filter((order) => order.role === viewTab)
             .filter((order) =>
-            activeTab === 'active'
-                ? ['approved', 'pending'].includes(order.status)
-                : ['completed', 'cancelled', 'rejected'].includes(order.status)
-        );
+                activeTab === 'active'
+                    ? ['approved', 'pending'].includes(order.status)
+                    : ['completed', 'cancelled', 'rejected'].includes(order.status)
+            );
     }, [orders, activeTab, viewTab]);
 
     return (
@@ -163,16 +163,16 @@ const MyOrders = ({ t }) => {
 
                 <div className="flex p-1 bg-gray-200 rounded-xl mb-3 mx-1">
                     <button onClick={() => setViewTab('received')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewTab === 'received' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500'}`}>
-                        As Owner
+                        {t('as_owner')}
                     </button>
                     <button onClick={() => setViewTab('sent')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewTab === 'sent' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500'}`}>
-                        As Farmer
+                        {t('as_farmer')}
                     </button>
                 </div>
                 <p className="text-[11px] text-gray-500 px-1 mb-3">
                     {viewTab === 'received'
-                        ? 'You are viewing requests received on your listings.'
-                        : 'You are viewing requests you have placed.'}
+                        ? t('viewing_requests')
+                        : t('viewing_requests_sent') || 'You are viewing requests you have placed.'}
                 </p>
 
                 <div className="flex p-1 bg-gray-200 rounded-xl mb-6 mx-1">
@@ -184,7 +184,7 @@ const MyOrders = ({ t }) => {
                     </button>
                 </div>
 
-                {loading && <p className="text-sm text-gray-500 px-1">{t('loading') || 'Loading...'}</p>}
+                {loading && <p className="text-sm text-gray-500 px-1">{t('loading')}</p>}
                 {!loading && error && <p className="text-sm text-red-500 px-1">{error}</p>}
 
                 {!loading && !error && (
@@ -201,7 +201,7 @@ const MyOrders = ({ t }) => {
                                         <p className="text-[10px] text-gray-500 mt-1 font-semibold uppercase">{item.type}</p>
                                         <div className="flex justify-between items-end mt-2">
                                             <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1"><Calendar size={12} /> {item.date}</p>
-                                            <p className="text-green-700 font-black">Rs {item.price ?? 0}</p>
+                                            <p className="text-green-700 font-black">रु. {item.price ?? 0}</p>
                                         </div>
                                         <div className="mt-2 flex gap-2">
                                             {item.role === 'received' && item.status === 'pending' && (
@@ -211,14 +211,14 @@ const MyOrders = ({ t }) => {
                                                         disabled={actionLoadingId === item.id}
                                                         className="text-[10px] px-2 py-1 rounded-md bg-green-600 text-white font-bold disabled:opacity-60"
                                                     >
-                                                        Approve
+                                                        {t('approve')}
                                                     </button>
                                                     <button
                                                         onClick={() => handleStatusChange(item.id, 'rejected')}
                                                         disabled={actionLoadingId === item.id}
                                                         className="text-[10px] px-2 py-1 rounded-md bg-red-500 text-white font-bold disabled:opacity-60"
                                                     >
-                                                        Reject
+                                                        {t('reject')}
                                                     </button>
                                                 </>
                                             )}
@@ -228,7 +228,7 @@ const MyOrders = ({ t }) => {
                                                     disabled={actionLoadingId === item.id}
                                                     className="text-[10px] px-2 py-1 rounded-md bg-gray-600 text-white font-bold disabled:opacity-60"
                                                 >
-                                                    Cancel
+                                                    {t('cancel')}
                                                 </button>
                                             )}
                                             {item.role === 'sent' && item.status === 'approved' && !item.isPaid && (
@@ -244,18 +244,8 @@ const MyOrders = ({ t }) => {
                                                     })}
                                                     className="text-[10px] px-2 py-1 rounded-md bg-emerald-600 text-white font-bold"
                                                 >
-                                                    Pay Now
+                                                    {t('pay_now')}
                                                 </button>
-                                            )}
-                                            {item.role === 'sent' && item.status === 'approved' && item.isPaid && (
-                                                <span className="text-[10px] px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
-                                                    Paid (Demo)
-                                                </span>
-                                            )}
-                                            {item.role === 'received' && item.status === 'approved' && !item.isPaid && (
-                                                <span className="text-[10px] px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200 font-bold">
-                                                    Waiting Payment
-                                                </span>
                                             )}
                                             {item.role === 'received' && item.status === 'approved' && item.isPaid && (
                                                 <button
@@ -263,26 +253,17 @@ const MyOrders = ({ t }) => {
                                                     disabled={actionLoadingId === item.id}
                                                     className="text-[10px] px-2 py-1 rounded-md bg-blue-600 text-white font-bold disabled:opacity-60"
                                                 >
-                                                    Mark Completed
+                                                    {t('mark_completed')}
                                                 </button>
                                             )}
                                         </div>
-                                        {item.role === 'sent' && item.status === 'pending' && (
-                                            <p className="text-[10px] text-gray-500 mt-2">Waiting for owner approval.</p>
-                                        )}
-                                        {item.role === 'sent' && item.status === 'approved' && !item.isPaid && (
-                                            <p className="text-[10px] text-gray-500 mt-2">Owner approved. Complete payment to confirm booking.</p>
-                                        )}
-                                        {item.role === 'sent' && item.status === 'approved' && item.isPaid && (
-                                            <p className="text-[10px] text-gray-500 mt-2">Payment done. Waiting for owner to complete service.</p>
-                                        )}
                                     </div>
                                 </div>
                             ))
                         ) : (
                             <div className="flex flex-col items-center justify-center py-12 opacity-50">
                                 <Package size={40} className="text-gray-400 mb-2" />
-                                <p className="text-xs font-bold">No orders found</p>
+                                <p className="text-xs font-bold">{t('no_orders')}</p>
                             </div>
                         )}
                     </div>

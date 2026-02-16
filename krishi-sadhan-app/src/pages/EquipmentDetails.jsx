@@ -168,6 +168,7 @@ const EquipmentDetails = ({ t }) => {
             platformFee,
             totalCost: baseCost + platformFee,
         };
+    }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, dayRate, hourlyRate, acreRate]);
     }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, unitDate, unitCount, rateCard]);
 
     const modeLabels = {
@@ -304,7 +305,7 @@ const EquipmentDetails = ({ t }) => {
     if (loading) {
         return (
             <MobileLayout t={t}>
-                <div className="p-4 text-sm text-gray-500">{t('loading') || 'Loading...'}</div>
+                <div className="p-4 text-sm text-gray-500">{t('loading')}</div>
             </MobileLayout>
         );
     }
@@ -327,7 +328,7 @@ const EquipmentDetails = ({ t }) => {
 
     return (
         <MobileLayout t={t}>
-            <div className="pb-24">
+            <div className="pb-10">
                 <div className="flex items-center gap-4 mb-4">
                     <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm border">
                         <ArrowLeft size={20} />
@@ -366,7 +367,7 @@ const EquipmentDetails = ({ t }) => {
                             {ownerName.charAt(0)}
                         </div>
                         <div>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">Owner</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">{t('owner')}</p>
                             <p className="font-bold text-gray-800 text-sm">{ownerName}</p>
                         </div>
                     </div>
@@ -377,7 +378,7 @@ const EquipmentDetails = ({ t }) => {
                             className="text-xs px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-100 font-bold disabled:opacity-60 flex items-center gap-1"
                         >
                             <Trash2 size={14} />
-                            {deleting ? 'Deleting...' : 'Delete Listing'}
+                            {deleting ? t('deleting') : t('delete_listing')}
                         </button>
                     )}
                 </div>
@@ -387,21 +388,30 @@ const EquipmentDetails = ({ t }) => {
                     <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
                 </div>
 
+                {/* --- SPECIFICATIONS SECTION WITH FULL TRANSLATION --- */}
                 <div className="px-2 mb-8">
-                    <h3 className="font-black text-gray-800 mb-3 uppercase text-xs tracking-widest">Specifications</h3>
+                    <h3 className="font-black text-gray-800 mb-3 uppercase text-xs tracking-widest">{t('specifications')}</h3>
                     <div className="grid grid-cols-1 gap-2">
-                        {[`Category: ${item.category}`, `Location: ${item.city}`].map((spec, index) => (
-                            <div key={index} className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded-xl font-medium">
-                                <ShieldCheck size={16} className="text-green-600" />
-                                {spec}
-                            </div>
-                        ))}
+                        {/* Translate Category Label and the dynamic value (e.g. tools -> अवजारे) */}
+                        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded-xl font-medium">
+                            <ShieldCheck size={16} className="text-green-600" />
+                            <span>{t('category_label')}: {t(item.category?.toLowerCase()) || item.category}</span>
+                        </div>
+                        {/* Translate Location Label */}
+                        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded-xl font-medium">
+                            <ShieldCheck size={16} className="text-green-600" />
+                            <span>{t('location_label')}: {item.city}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="px-2 mb-32">
+                <div className="px-2 mb-8">
                     {item.listingType === 'rent' && (
                         <>
+                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
+                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{t('booking_type')}</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['day', 'hour', 'acre'].map((mode) => (
                             <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
                                 <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Booking Type</p>
                                 <div className="grid grid-cols-2 gap-2">
@@ -410,8 +420,9 @@ const EquipmentDetails = ({ t }) => {
                                             key={mode}
                                             type="button"
                                             onClick={() => setBookingMode(mode)}
-                                            className={`p-2 rounded-lg text-xs font-bold border ${bookingMode === mode ? 'bg-green-600 text-white border-green-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                                            className={`p-2 rounded-lg text-xs font-bold border transition-all ${bookingMode === mode ? 'bg-green-600 text-white border-green-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
                                         >
+                                            {t(`by_${mode}`)}
                                             By {modeLabels[mode] || mode}
                                         </button>
                                     ))}
@@ -419,8 +430,8 @@ const EquipmentDetails = ({ t }) => {
                             </div>
 
                             {bookingMode === 'day' && (
-                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
-                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By Day</p>
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-tight">{t('select_days')}</p>
                                     <div className="grid grid-cols-2 gap-2">
                                         <input type="date" value={dayStartDate} onChange={(e) => setDayStartDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
                                         <input type="date" value={dayEndDate} onChange={(e) => setDayEndDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
@@ -429,8 +440,8 @@ const EquipmentDetails = ({ t }) => {
                             )}
 
                             {bookingMode === 'hour' && (
-                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
-                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By Hour</p>
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-tight">{t('select_hour_details')}</p>
                                     <div className="grid grid-cols-3 gap-2">
                                         <input type="date" value={hourDate} onChange={(e) => setHourDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
                                         <input type="time" value={hourStartTime} onChange={(e) => setHourStartTime(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
@@ -439,6 +450,9 @@ const EquipmentDetails = ({ t }) => {
                                 </div>
                             )}
 
+                            {bookingMode === 'acre' && (
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-tight">{t('select_acreage')}</p>
                             {bookingMode !== 'day' && bookingMode !== 'hour' && (
                                 <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
                                     <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By {modeLabels[bookingMode] || bookingMode}</p>
@@ -449,50 +463,68 @@ const EquipmentDetails = ({ t }) => {
                                 </div>
                             )}
 
-                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
-                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Fare Estimate</p>
+                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
+                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{t('fare_estimate')}</p>
                                 <div className="text-[11px] text-gray-600 space-y-1">
-                                    <p>Rate: Rs {computed.selectedRate}/{computed.bookingType || '-'}</p>
-                                    <p>Quantity: {computed.quantity || 0}</p>
-                                    <p>Base Cost: Rs {computed.baseCost}</p>
-                                    <p>Platform Fee (5%): Rs {computed.platformFee}</p>
-                                    <p className="font-bold text-green-700">Estimated Total: Rs {computed.totalCost}</p>
+                                    <p>{t('rate')}: Rs {computed.selectedRate}/{t(`by_${computed.bookingType}`)}</p>
+                                    <p>{t('quantity')}: {computed.quantity || 0}</p>
+                                    <p>{t('base_cost')}: Rs {computed.baseCost}</p>
+                                    <p>{t('platform_fee')}: Rs {computed.platformFee}</p>
+                                    <p className="font-bold text-green-700">{t('estimated_total')}: Rs {computed.totalCost}</p>
                                 </div>
                             </div>
                         </>
                     )}
 
-                    <div className="bg-white p-4 rounded-xl border border-gray-100">
-                        <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Message (Optional)</p>
+                    {/* --- MESSAGE SECTION WITH TRANSLATED PLACEHOLDER --- */}
+                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6">
+                        <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{t('message_optional')}</p>
                         <textarea
                             value={requestMessage}
                             onChange={(e) => setRequestMessage(e.target.value)}
                             rows="3"
-                            className="w-full border border-gray-200 rounded-lg p-2 text-sm"
-                            placeholder="Add request note..."
+                            className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-green-500 outline-none"
+                            placeholder={t('add_request_note')}
                         />
                     </div>
-                    {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
-                    {success && <p className="text-green-600 text-xs mt-2">{success}</p>}
-                </div>
 
-                {!isOwner && (
-                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 px-6 flex items-center gap-3 z-50">
-                        <div className="flex-1">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase leading-none">Total Price</p>
-                            <p className="text-xl font-black text-gray-800">Rs {item.listingType === 'rent' ? computed.totalCost : displayPrice}</p>
+                    {!isOwner && (
+                        <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
+                            <div className="flex justify-between items-center px-1">
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-tight">{t('total_estimate')}</span>
+                                <span className="text-2xl font-black text-gray-800">Rs {item.listingType === 'rent' ? computed.totalCost : displayPrice}</span>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={handleCreateRequest}
+                                    disabled={submitting}
+                                    className="w-full bg-green-700 text-white py-5 rounded-2xl font-black shadow-lg active:scale-95 transition-all uppercase tracking-wider text-sm"
+                                >
+                                    {submitting ? t('loading') : item.listingType === 'rent' ? t('book_now') : t('buy_now')}
+                                </button>
+
+                                <button
+                                    onClick={handleWhatsAppBooking}
+                                    className="w-full bg-white text-[#25D366] border-2 border-[#25D366] py-4 rounded-2xl font-black active:scale-95 transition-all flex items-center justify-center gap-2 text-sm uppercase"
+                                >
+                                    {t('whatsapp_owner')}
+                                </button>
+                            </div>
+
+                            <p className="text-[9px] text-center text-gray-400 font-medium px-4 leading-relaxed">
+                                * Final availability and pricing will be confirmed by the owner after the request is sent.
+                            </p>
                         </div>
-                        <button onClick={handleWhatsAppBooking} className="flex-[1.1] bg-[#25D366] text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all">
-                            WhatsApp
-                        </button>
-                        <button onClick={handleCreateRequest} disabled={submitting} className="flex-[1.5] bg-green-700 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all disabled:opacity-60">
-                            {submitting ? 'Please wait...' : item.listingType === 'rent' ? 'Send Booking Request' : 'Send Purchase Request'}
-                        </button>
-                    </div>
-                )}
+                    )}
+
+                    {error && <p className="text-red-500 text-xs mt-2 font-bold text-center">{error}</p>}
+                    {success && <p className="text-green-600 text-xs mt-2 font-bold text-center">{success}</p>}
+                </div>
             </div>
         </MobileLayout>
     );
 };
 
+export default EquipmentDetails;
 export default EquipmentDetails;

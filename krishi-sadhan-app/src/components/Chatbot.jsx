@@ -262,6 +262,9 @@ const Chatbot = ({ t }) => {
     };
 
     return (
+        <div className={`fixed bottom-32 right-4 z-[60] flex flex-col items-end gap-4 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+
+            {/* Chat Interface Window */}
         <div className={`fixed bottom-24 right-4 z-[60] flex flex-col items-end gap-4 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
             {isOpen && (
                 <div className="bg-white w-80 h-96 rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 pointer-events-auto">
