@@ -15,6 +15,7 @@ const CITY_COORDINATES = {
 const getCoordinates = (city) => CITY_COORDINATES[(city || '').trim().toLowerCase()] || { lat: 0, lng: 0 };
 
 const PostEquipment = ({ t }) => {
+    // Ensuring translations are loaded
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const type = searchParams.get('type') || 'rent';
@@ -31,6 +32,8 @@ const PostEquipment = ({ t }) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Get the rates from services logic
     const rentRate = getRentRateByCategory(formData.category);
 
     useEffect(() => {
@@ -95,7 +98,7 @@ const PostEquipment = ({ t }) => {
                 <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm border">
                     <ArrowLeft size={20} className="text-gray-600" />
                 </button>
-                <h1 className="text-xl font-black text-gray-800 capitalize">
+                <h1 className="text-xl font-black text-gray-800">
                     {type === 'rent' ? t('rent_item') : t('sell_item')}
                 </h1>
             </div>
@@ -105,7 +108,7 @@ const PostEquipment = ({ t }) => {
                     <div className="bg-green-100 p-6 rounded-full mb-4">
                         <CheckCircle2 size={48} className="text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-black text-gray-800">Success!</h2>
+                    <h2 className="text-2xl font-black text-gray-800">{t('success')}</h2>
                     <p className="text-gray-500 mt-2">{t('alert_success')}</p>
                 </div>
             ) : (
@@ -132,12 +135,12 @@ const PostEquipment = ({ t }) => {
 
                     <div className="space-y-2">
                         <label className="text-xs font-black text-gray-400 uppercase ml-1">{t('title')}</label>
-                        <input type="text" placeholder="e.g. Mahindra Tractor" className="w-full bg-white p-4 rounded-2xl border border-gray-100 outline-none font-bold text-gray-800 focus:border-green-600 shadow-sm" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+                        <input type="text" placeholder={t('example_tractor')} className="w-full bg-white p-4 rounded-2xl border border-gray-100 outline-none font-bold text-gray-800 focus:border-green-600 shadow-sm" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-400 uppercase ml-1">{t('city_village') || 'City'}</label>
-                        <input type="text" placeholder="Kolhapur" className="w-full bg-white p-4 rounded-2xl border border-gray-100 outline-none font-bold text-gray-800 focus:border-green-600 shadow-sm" required value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                        <label className="text-xs font-black text-gray-400 uppercase ml-1">{t('city_village')}</label>
+                        <input type="text" placeholder={t('example_city')} className="w-full bg-white p-4 rounded-2xl border border-gray-100 outline-none font-bold text-gray-800 focus:border-green-600 shadow-sm" required value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
                     </div>
 
                     <div className="flex gap-4">
@@ -147,20 +150,20 @@ const PostEquipment = ({ t }) => {
                                 <Tag size={18} className="absolute left-4 top-4 text-gray-400" />
                                 <select className="w-full bg-white p-4 pl-11 rounded-2xl border border-gray-100 outline-none font-bold text-gray-800 appearance-none shadow-sm" required value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
                                     <option value="">{t('select_category')}</option>
-                                    <option value="tractor">Tractor</option>
-                                    <option value="harvester">Harvester</option>
-                                    <option value="tools">Tools</option>
-                                    <option value="seeds">Seeds</option>
+                                    <option value="tractor">{t('tractors')}</option>
+                                    <option value="harvester">{t('harvesters')}</option>
+                                    <option value="tools">{t('farming_tools')}</option>
+                                    <option value="seeds">{t('seeds')}</option>
                                 </select>
                             </div>
                         </div>
                         <div className="flex-1 space-y-2">
-                            <label className="text-xs font-black text-gray-400 uppercase ml-1">{type === 'rent' ? 'Standard App Rate' : t('price_sell')}</label>
+                            <label className="text-xs font-black text-gray-400 uppercase ml-1">{type === 'rent' ? t('standard_app_rate') : t('price_sell')}</label>
                             {type === 'rent' ? (
                                 <div className="w-full bg-green-50 p-4 rounded-2xl border border-green-100 font-bold text-gray-800 shadow-sm">
-                                    <p className="text-sm">Rs {rentRate.hour}/hour</p>
-                                    <p className="text-xs text-gray-500 mt-1">Rs {rentRate.acre}/acre</p>
-                                    <p className="text-[10px] text-green-700 mt-2">Owner cannot edit this rate.</p>
+                                    <p className="text-sm">रु. {rentRate.hour}/{t('by_hour')}</p>
+                                    <p className="text-xs text-gray-500 mt-1">रु. {rentRate.acre}/{t('by_acre')}</p>
+                                    <p className="text-[10px] text-green-700 mt-2">{t('owner_cannot_edit')}</p>
                                 </div>
                             ) : (
                                 <div className="relative">
@@ -173,11 +176,11 @@ const PostEquipment = ({ t }) => {
 
                     <div className="space-y-2">
                         <label className="text-xs font-black text-gray-400 uppercase ml-1">{t('description')}</label>
-                        <textarea placeholder="Condition, model details..." rows="3" className="w-full bg-white p-4 rounded-2xl border border-gray-100 outline-none font-medium text-gray-600 resize-none shadow-sm" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}></textarea>
+                        <textarea placeholder={t('condition_model_details')} rows="3" className="w-full bg-white p-4 rounded-2xl border border-gray-100 outline-none font-medium text-gray-600 resize-none shadow-sm" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}></textarea>
                     </div>
 
                     <button type="submit" disabled={submitting} className="w-full bg-green-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-green-100 active:scale-95 transition-all mt-4 disabled:opacity-60">
-                        {submitting ? (t('loading') || 'Loading...') : t('submit_ad').toUpperCase()}
+                        {submitting ? t('loading') : t('submit_ad').toUpperCase()}
                     </button>
                 </form>
             )}

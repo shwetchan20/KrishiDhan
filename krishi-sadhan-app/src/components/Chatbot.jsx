@@ -93,7 +93,7 @@ const Chatbot = ({ t }) => {
     };
 
     return (
-        <div className={`fixed bottom-24 right-4 z-[60] flex flex-col items-end gap-4 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+        <div className={`fixed bottom-32 right-4 z-[60] flex flex-col items-end gap-4 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
 
             {/* Chat Interface Window */}
             {isOpen && (
