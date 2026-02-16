@@ -11,6 +11,7 @@ import PostChoice from './pages/PostChoice';
 import PostEquipment from './pages/PostEquipment';
 import Profile from './pages/Profile';
 import MyOrders from './pages/MyOrders';
+import MyListings from './pages/MyListings';
 import Categories from './pages/Categories';
 import EquipmentDetails from './pages/EquipmentDetails';
 import Schemes from './pages/Schemes';
@@ -64,6 +65,7 @@ function App() {
                     {/* Personal & Records */}
                     <Route path="/profile" element={<ProtectedRoute><Profile t={t} setLang={setLang} currentLang={lang} /></ProtectedRoute>} />
                     <Route path="/my-orders" element={<ProtectedRoute><MyOrders t={t} /></ProtectedRoute>} />
+                    <Route path="/my-listings" element={<ProtectedRoute><MyListings t={t} /></ProtectedRoute>} />
                     <Route path="/payment" element={<ProtectedRoute><PaymentDemo t={t} /></ProtectedRoute>} />
                     <Route path="/impact" element={<ProtectedRoute><ImpactDashboard t={t} /></ProtectedRoute>} />
 

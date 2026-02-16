@@ -4,12 +4,34 @@ const DEFAULT_RENT_RATE = {
 };
 
 export const RENT_RATE_CARD = {
-    tractor: { hour: 700, acre: 1600 },
-    harvester: { hour: 1200, acre: 2600 },
-    tools: { hour: 350, acre: 800 },
-    seeds: { hour: 250, acre: 500 },
-    irrigation: { hour: 500, acre: 1100 },
-    tillage: { hour: 800, acre: 1800 },
+    harvester: { acre: 1700 },
+    tools: { acre: 1500 },
+    blower: { liter: 10, minLiter: 100 },
+    trolly: { distance: 60 },
+    sowing_machine: { kg: 180 },
+    thresing_machine: { ton: 2000, quintal: 200 },
+    rotar: { acre: 1200, hour: 900 },
+};
+
+export const CATEGORY_LABELS = {
+    tractor: 'Tractor',
+    harvester: 'Harvester',
+    tools: 'Farming Tools',
+    blower: 'Blower',
+    trolly: 'Trolly',
+    sowing_machine: 'Sowing Machine',
+    thresing_machine: 'Thresing Machine',
+    rotar: 'Rotar',
+};
+
+export const RENT_ALLOWED_UNITS = {
+    harvester: ['acre'],
+    tools: ['acre'],
+    blower: ['liter'],
+    trolly: ['distance'],
+    sowing_machine: ['kg'],
+    thresing_machine: ['ton', 'quintal'],
+    rotar: ['acre', 'hour'],
 };
 
 export function getRentRateByCategory(category) {
@@ -17,3 +39,7 @@ export function getRentRateByCategory(category) {
     return RENT_RATE_CARD[key] || DEFAULT_RENT_RATE;
 }
 
+export function getAllowedRentUnits(category) {
+    const key = String(category || '').trim().toLowerCase();
+    return RENT_ALLOWED_UNITS[key] || ['hour', 'acre'];
+}

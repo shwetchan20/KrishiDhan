@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Globe, HelpCircle, LogOut, ChevronRight, Edit2, ShoppingBag, Phone, MapPin, Package } from 'lucide-react';
+import { Globe, HelpCircle, LogOut, ChevronRight, Edit2, ShoppingBag, Phone, MapPin, PackageOpen } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import { getUser, logout as logoutUser, updateUser, uploadImages } from '../services';
+import { getListings, getUser, logout as logoutUser, updateUser, uploadImages } from '../services';
 
 const Profile = ({ t, setLang, currentLang }) => {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ const Profile = ({ t, setLang, currentLang }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
+    const [hasListings, setHasListings] = useState(false);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -28,6 +30,13 @@ const Profile = ({ t, setLang, currentLang }) => {
                 };
                 setUser(profile);
             } else { setMessage(result.message || 'Failed to load profile'); }
+                localStorage.setItem('kd_user', JSON.stringify(profile));
+
+                const listingResult = await getListings({ ownerId: uid, limitCount: 1 });
+                setHasListings(listingResult.ok && (listingResult.data || []).length > 0);
+            } else {
+                setMessage(result.message || 'Failed to load profile');
+            }
             setLoading(false);
         };
         loadProfile();
@@ -106,6 +115,28 @@ const Profile = ({ t, setLang, currentLang }) => {
                             <div className="flex items-center gap-4">
                                 <div className="bg-green-50 p-3 rounded-xl text-green-700"><Package size={20} /></div>
                                 <span className="font-bold text-gray-700">{t('my_listed_tools')}</span>
+                    {hasListings && (
+                        <button
+                            onClick={() => navigate('/my-listings')}
+                            className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-98 transition-transform"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="bg-green-50 p-2.5 rounded-xl text-green-600">
+                                    <PackageOpen size={20} />
+                                </div>
+                                <span className="font-bold text-gray-700">My Listings</span>
+                            </div>
+                            <ChevronRight size={20} className="text-gray-300" />
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => navigate('/my-orders')}
+                        className="w-full bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-98 transition-transform"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600">
+                                <ShoppingBag size={20} />
                             </div>
                             <ChevronRight size={20} className="text-gray-300" />
                         </button>
