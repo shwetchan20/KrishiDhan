@@ -30,14 +30,14 @@ const Profile = ({ t, setLang, currentLang }) => {
             }
             const result = await getUser(uid);
 
-            if (result.ok) {
+            if (result.ok && result.data) {
                 const profile = {
-                    uid: result.data.uid || uid,
-                    name: result.data.name || '',
-                    phone: result.data.phone || '',
-                    city: result.data.city || '',
-                    photoURL: result.data.photoURL || '',
-                    role: result.data.role || 'farmer',
+                    uid: result.data?.uid || uid,
+                    name: result.data?.name || '',
+                    phone: result.data?.phone || '',
+                    city: result.data?.city || '',
+                    photoURL: result.data?.photoURL || '',
+                    role: result.data?.role || 'farmer',
                 };
                 setUser(profile);
                 localStorage.setItem('kd_user', JSON.stringify(profile));
@@ -45,7 +45,7 @@ const Profile = ({ t, setLang, currentLang }) => {
                 const listingResult = await getListings({ ownerId: uid, limitCount: 1 });
                 setHasListings(listingResult.ok && (listingResult.data || []).length > 0);
             } else {
-                setMessage(result.message || 'Failed to load profile');
+                setMessage(result.message || 'Failed to load profile. Ensure user document exists in Firestore.');
             }
             setLoading(false);
         };
