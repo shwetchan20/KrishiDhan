@@ -5,6 +5,73 @@ import MobileLayout from '../components/MobileLayout';
 import { createRequest, deleteListing, getAllowedRentUnits, getListingById, getRentRateByCategory, getUser } from '../services';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const getCurrentLang = () => localStorage.getItem('kd_lang') || 'en';
+
+const CATEGORY_LABELS_BY_LANG = {
+    en: {
+        tractor: 'Tractor',
+        harvester: 'Harvester',
+        tools: 'Farming Tools',
+        blower: 'Blower',
+        trolly: 'Trolly',
+        sowing_machine: 'Sowing Machine',
+        thresing_machine: 'Thresing Machine',
+        rotar: 'Rotar',
+    },
+    hi: {
+        tractor: 'ट्रैक्टर',
+        harvester: 'हार्वेस्टर',
+        tools: 'कृषि उपकरण',
+        blower: 'ब्लोअर',
+        trolly: 'ट्रॉली',
+        sowing_machine: 'बुवाई मशीन',
+        thresing_machine: 'थ्रेसिंग मशीन',
+        rotar: 'रोटर',
+    },
+    mr: {
+        tractor: 'ट्रॅक्टर',
+        harvester: 'हार्वेस्टर',
+        tools: 'शेतीची अवजारे',
+        blower: 'ब्लोअर',
+        trolly: 'ट्रॉली',
+        sowing_machine: 'पेरणी यंत्र',
+        thresing_machine: 'थ्रेशिंग मशीन',
+        rotar: 'रोटर',
+    },
+};
+
+const MODE_LABELS_BY_LANG = {
+    en: {
+        day: 'By Day',
+        hour: 'By Hour',
+        acre: 'By Acre',
+        distance: 'By Distance (km)',
+        liter: 'By Liter',
+        kg: 'By Kg',
+        ton: 'By Ton',
+        quintal: 'By Quintal',
+    },
+    hi: {
+        day: 'दिन के अनुसार',
+        hour: 'घंटे के अनुसार',
+        acre: 'एकड़ के अनुसार',
+        distance: 'किलोमीटर के अनुसार',
+        liter: 'लीटर के अनुसार',
+        kg: 'किलो के अनुसार',
+        ton: 'टन के अनुसार',
+        quintal: 'क्विंटल के अनुसार',
+    },
+    mr: {
+        day: 'दिवसाला',
+        hour: 'तासाला',
+        acre: 'एकराला',
+        distance: 'किलोमीटरनुसार',
+        liter: 'लिटरनुसार',
+        kg: 'किलोनुसार',
+        ton: 'टननुसार',
+        quintal: 'क्विंटलनुसार',
+    },
+};
 
 const EquipmentDetails = ({ t }) => {
     const navigate = useNavigate();
@@ -168,19 +235,12 @@ const EquipmentDetails = ({ t }) => {
             platformFee,
             totalCost: baseCost + platformFee,
         };
-    }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, dayRate, hourlyRate, acreRate]);
     }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, unitDate, unitCount, rateCard]);
 
-    const modeLabels = {
-        day: 'Day',
-        hour: 'Hour',
-        acre: 'Acre',
-        distance: 'Distance (km)',
-        liter: 'Liter',
-        kg: 'Kg',
-        ton: 'Ton',
-        quintal: 'Quintal',
-    };
+    const currentLang = getCurrentLang();
+    const modeLabels = MODE_LABELS_BY_LANG[currentLang] || MODE_LABELS_BY_LANG.en;
+    const categoryLabels = CATEGORY_LABELS_BY_LANG[currentLang] || CATEGORY_LABELS_BY_LANG.en;
+    const localizedCategory = categoryLabels[String(item?.category || '').toLowerCase()] || item?.category;
 
     const getWhatsAppPhone = (phone) => {
         const digits = String(phone || '').replace(/\D/g, '');
@@ -238,7 +298,7 @@ const EquipmentDetails = ({ t }) => {
             return '';
         }
         if (!unitDate) return 'Please select booking date.';
-        if (!Number.isFinite(Number(unitCount)) || Number(unitCount) <= 0) return `Please enter valid ${modeLabels[bookingMode]?.toLowerCase() || 'quantity'}.`;
+        if (!Number.isFinite(Number(unitCount)) || Number(unitCount) <= 0) return `Please enter valid ${bookingMode || 'quantity'}.`;
         return '';
     };
 
@@ -305,7 +365,7 @@ const EquipmentDetails = ({ t }) => {
     if (loading) {
         return (
             <MobileLayout t={t}>
-                <div className="p-4 text-sm text-gray-500">{t('loading')}</div>
+                <div className="p-4 text-sm text-gray-500">{t('loading') || 'Loading...'}</div>
             </MobileLayout>
         );
     }
@@ -328,7 +388,7 @@ const EquipmentDetails = ({ t }) => {
 
     return (
         <MobileLayout t={t}>
-            <div className="pb-10">
+            <div className="pb-24">
                 <div className="flex items-center gap-4 mb-4">
                     <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-full shadow-sm border">
                         <ArrowLeft size={20} />
@@ -367,7 +427,7 @@ const EquipmentDetails = ({ t }) => {
                             {ownerName.charAt(0)}
                         </div>
                         <div>
-                            <p className="text-[9px] text-gray-400 font-bold uppercase">{t('owner')}</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">Owner</p>
                             <p className="font-bold text-gray-800 text-sm">{ownerName}</p>
                         </div>
                     </div>
@@ -388,50 +448,40 @@ const EquipmentDetails = ({ t }) => {
                     <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
                 </div>
 
-                {/* --- SPECIFICATIONS SECTION WITH FULL TRANSLATION --- */}
                 <div className="px-2 mb-8">
                     <h3 className="font-black text-gray-800 mb-3 uppercase text-xs tracking-widest">{t('specifications')}</h3>
                     <div className="grid grid-cols-1 gap-2">
-                        {/* Translate Category Label and the dynamic value (e.g. tools -> अवजारे) */}
-                        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded-xl font-medium">
-                            <ShieldCheck size={16} className="text-green-600" />
-                            <span>{t('category_label')}: {t(item.category?.toLowerCase()) || item.category}</span>
-                        </div>
-                        {/* Translate Location Label */}
-                        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded-xl font-medium">
-                            <ShieldCheck size={16} className="text-green-600" />
-                            <span>{t('location_label')}: {item.city}</span>
-                        </div>
+                        {[`${t('category_label')}: ${localizedCategory}`, `${t('location_label')}: ${item.city}`].map((spec, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 p-3 rounded-xl font-medium">
+                                <ShieldCheck size={16} className="text-green-600" />
+                                {spec}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                <div className="px-2 mb-8">
+                <div className="px-2 mb-32">
                     {item.listingType === 'rent' && (
                         <>
-                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
-                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{t('booking_type')}</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['day', 'hour', 'acre'].map((mode) => (
                             <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
-                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Booking Type</p>
+                                <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{t('booking_type')}</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {availableBookingModes.map((mode) => (
                                         <button
                                             key={mode}
                                             type="button"
                                             onClick={() => setBookingMode(mode)}
-                                            className={`p-2 rounded-lg text-xs font-bold border transition-all ${bookingMode === mode ? 'bg-green-600 text-white border-green-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                                            className={`p-2 rounded-lg text-xs font-bold border ${bookingMode === mode ? 'bg-green-600 text-white border-green-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
                                         >
-                                            {t(`by_${mode}`)}
-                                            By {modeLabels[mode] || mode}
+                                            {modeLabels[mode] || mode}
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
                             {bookingMode === 'day' && (
-                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
-                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-tight">{t('select_days')}</p>
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{modeLabels.day}</p>
                                     <div className="grid grid-cols-2 gap-2">
                                         <input type="date" value={dayStartDate} onChange={(e) => setDayStartDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
                                         <input type="date" value={dayEndDate} onChange={(e) => setDayEndDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
@@ -440,8 +490,8 @@ const EquipmentDetails = ({ t }) => {
                             )}
 
                             {bookingMode === 'hour' && (
-                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
-                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-tight">{t('select_hour_details')}</p>
+                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{modeLabels.hour}</p>
                                     <div className="grid grid-cols-3 gap-2">
                                         <input type="date" value={hourDate} onChange={(e) => setHourDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
                                         <input type="time" value={hourStartTime} onChange={(e) => setHourStartTime(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
@@ -450,12 +500,9 @@ const EquipmentDetails = ({ t }) => {
                                 </div>
                             )}
 
-                            {bookingMode === 'acre' && (
-                                <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
-                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-tight">{t('select_acreage')}</p>
                             {bookingMode !== 'day' && bookingMode !== 'hour' && (
                                 <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
-                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">By {modeLabels[bookingMode] || bookingMode}</p>
+                                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{modeLabels[bookingMode] || bookingMode}</p>
                                     <div className="grid grid-cols-2 gap-2">
                                         <input type="date" value={unitDate} onChange={(e) => setUnitDate(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
                                         <input type="number" min="1" value={unitCount} onChange={(e) => setUnitCount(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder={modeLabels[bookingMode] || 'Quantity'} />
@@ -463,10 +510,10 @@ const EquipmentDetails = ({ t }) => {
                                 </div>
                             )}
 
-                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3 shadow-sm">
+                            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-3">
                                 <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{t('fare_estimate')}</p>
                                 <div className="text-[11px] text-gray-600 space-y-1">
-                                    <p>{t('rate')}: Rs {computed.selectedRate}/{t(`by_${computed.bookingType}`)}</p>
+                                    <p>{t('rate')}: Rs {computed.selectedRate}/{computed.bookingType || '-'}</p>
                                     <p>{t('quantity')}: {computed.quantity || 0}</p>
                                     <p>{t('base_cost')}: Rs {computed.baseCost}</p>
                                     <p>{t('platform_fee')}: Rs {computed.platformFee}</p>
@@ -476,55 +523,37 @@ const EquipmentDetails = ({ t }) => {
                         </>
                     )}
 
-                    {/* --- MESSAGE SECTION WITH TRANSLATED PLACEHOLDER --- */}
-                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6">
+                    <div className="bg-white p-4 rounded-xl border border-gray-100">
                         <p className="text-xs font-bold text-gray-500 mb-2 uppercase">{t('message_optional')}</p>
                         <textarea
                             value={requestMessage}
                             onChange={(e) => setRequestMessage(e.target.value)}
                             rows="3"
-                            className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-green-500 outline-none"
+                            className="w-full border border-gray-200 rounded-lg p-2 text-sm"
                             placeholder={t('add_request_note')}
                         />
                     </div>
-
-                    {!isOwner && (
-                        <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
-                            <div className="flex justify-between items-center px-1">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-tight">{t('total_estimate')}</span>
-                                <span className="text-2xl font-black text-gray-800">Rs {item.listingType === 'rent' ? computed.totalCost : displayPrice}</span>
-                            </div>
-
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    onClick={handleCreateRequest}
-                                    disabled={submitting}
-                                    className="w-full bg-green-700 text-white py-5 rounded-2xl font-black shadow-lg active:scale-95 transition-all uppercase tracking-wider text-sm"
-                                >
-                                    {submitting ? t('loading') : item.listingType === 'rent' ? t('book_now') : t('buy_now')}
-                                </button>
-
-                                <button
-                                    onClick={handleWhatsAppBooking}
-                                    className="w-full bg-white text-[#25D366] border-2 border-[#25D366] py-4 rounded-2xl font-black active:scale-95 transition-all flex items-center justify-center gap-2 text-sm uppercase"
-                                >
-                                    {t('whatsapp_owner')}
-                                </button>
-                            </div>
-
-                            <p className="text-[9px] text-center text-gray-400 font-medium px-4 leading-relaxed">
-                                * Final availability and pricing will be confirmed by the owner after the request is sent.
-                            </p>
-                        </div>
-                    )}
-
-                    {error && <p className="text-red-500 text-xs mt-2 font-bold text-center">{error}</p>}
-                    {success && <p className="text-green-600 text-xs mt-2 font-bold text-center">{success}</p>}
+                    {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+                    {success && <p className="text-green-600 text-xs mt-2">{success}</p>}
                 </div>
+
+                {!isOwner && (
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 px-6 flex items-center gap-3 z-50">
+                        <div className="flex-1">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase leading-none">{t('total_estimate')}</p>
+                            <p className="text-xl font-black text-gray-800">Rs {item.listingType === 'rent' ? computed.totalCost : displayPrice}</p>
+                        </div>
+                        <button onClick={handleWhatsAppBooking} className="flex-[1.1] bg-[#25D366] text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all">
+                            {t('whatsapp_owner')}
+                        </button>
+                        <button onClick={handleCreateRequest} disabled={submitting} className="flex-[1.5] bg-green-700 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all disabled:opacity-60">
+                            {submitting ? (t('loading') || 'Loading...') : item.listingType === 'rent' ? t('book_now') : t('buy_now')}
+                        </button>
+                    </div>
+                )}
             </div>
         </MobileLayout>
     );
 };
 
-export default EquipmentDetails;
 export default EquipmentDetails;

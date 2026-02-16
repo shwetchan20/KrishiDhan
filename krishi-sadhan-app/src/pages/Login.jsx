@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { loginWithEmail } from '../services';
 
 const Login = ({ t }) => {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -59,13 +61,23 @@ const Login = ({ t }) => {
                     </div>
                     <div>
                         <label className="text-xs font-bold text-gray-400 uppercase ml-1">{t('password')}</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="........"
-                            className="w-full border-b py-3 outline-none focus:border-green-700 transition-colors font-medium"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="........"
+                                className="w-full border-b py-3 pr-10 outline-none focus:border-green-700 transition-colors font-medium"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-700"
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
 
                     <button

@@ -1,16 +1,77 @@
-# React + Vite
+# KrishiDhan App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Mobile-first agricultural marketplace to rent or sell equipment.
 
-Currently, two official plugins are available:
+## Local Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Install dependencies:
 
-## React Compiler
+```bash
+npm install
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Create env file from example:
 
-## Expanding the ESLint configuration
+```bash
+cp .env.example .env.local
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+3. Fill all Firebase + Cloudinary values in `.env.local`.
+
+4. Start app:
+
+```bash
+npm run dev
+```
+
+## Required Environment Variables
+
+```
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET
+VITE_FIREBASE_MESSAGING_SENDER_ID
+VITE_FIREBASE_APP_ID
+
+VITE_CLOUDINARY_CLOUD_NAME
+VITE_CLOUDINARY_UPLOAD_PRESET
+VITE_CLOUDINARY_UPLOAD_FOLDER
+```
+
+## Common Errors
+
+### 1) `Missing Firebase env config`
+
+Cause: `.env.local` missing or incomplete.
+
+Fix: Create `.env.local` from `.env.example` and fill all values.
+
+### 2) Profile page shows load error
+
+Cause: logged-in Firebase user does not have a matching Firestore document in `users/{uid}`.
+
+Fix: Register user through app flow, or create Firestore user document with:
+
+```json
+{
+  "uid": "user_uid",
+  "name": "User Name",
+  "phone": "9876543210",
+  "city": "Kolhapur",
+  "photoURL": "",
+  "role": "farmer"
+}
+```
+
+## Build
+
+```bash
+npm run build
+```
