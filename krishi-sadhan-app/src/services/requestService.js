@@ -1,5 +1,6 @@
 import {
     collection,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -290,5 +291,36 @@ export async function updatePaymentStatus({ requestId, actorId, paymentStatus })
         return ok({ id: requestId, paymentStatus: nextPaymentStatus });
     } catch (error) {
         return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to update payment status', toErrorDetails(error));
+    }
+}
+
+export async function deleteRequest({ requestId, actorId }) {
+    if (!requestId || !actorId) {
+        return fail(ServiceErrorCode.VALIDATION_ERROR, 'requestId and actorId are required');
+    }
+
+    try {
+        const requestRef = doc(db, REQUESTS_COLLECTION, requestId);
+        const requestSnap = await getDoc(requestRef);
+        if (!requestSnap.exists()) {
+            return fail(ServiceErrorCode.NOT_FOUND, 'Request not found');
+        }
+
+        const request = requestSnap.data();
+        const isOwner = request.ownerId === actorId;
+        const isRenter = request.renterId === actorId;
+        if (!isOwner && !isRenter) {
+            return fail(ServiceErrorCode.AUTH_ERROR, 'Not authorized to delete this request');
+        }
+
+        const current = String(request.status || '').toLowerCase();
+        if (!FINAL_STATUSES.has(current)) {
+            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Only history requests can be deleted');
+        }
+
+        await deleteDoc(requestRef);
+        return ok({ id: requestId, deleted: true });
+    } catch (error) {
+        return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to delete request', toErrorDetails(error));
     }
 }

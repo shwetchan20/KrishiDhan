@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, X, ChevronRight, Bell, MapPin } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import { getListings, getRequests } from '../services';
+import { getListings, getRequests, getUser } from '../services';
 
 const toRad = (value) => (value * Math.PI) / 180;
 
@@ -40,6 +40,14 @@ const Home = ({ t }) => {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [userName, setUserName] = useState(() => {
+        try {
+            const user = JSON.parse(localStorage.getItem('kd_user') || '{}');
+            return user?.name || '';
+        } catch {
+            return '';
+        }
+    });
 
     const schemes = [
         { id: 1, name: 'pm_kisan', img: '/schemes-logos/pm_kisan.jpeg', url: 'https://pmkisan.gov.in/' },
@@ -49,6 +57,28 @@ const Home = ({ t }) => {
         { id: 5, name: 'magel_tyala', img: '/schemes-logos/magel_tyala.jpeg', url: 'https://mahadbt.maharashtra.gov.in/' },
         { id: 6, name: 'mahadbt', img: '/schemes-logos/mahadbt.jpeg', url: 'https://mahadbt.maharashtra.gov.in/' },
     ];
+
+    useEffect(() => {
+        const loadUser = async () => {
+            const uid = localStorage.getItem('kd_uid');
+            if (!uid) return;
+
+            const userResult = await getUser(uid);
+            if (!userResult.ok) return;
+            const resolvedName = userResult.data?.name || '';
+            setUserName(resolvedName);
+            if (resolvedName) {
+                try {
+                    const existing = JSON.parse(localStorage.getItem('kd_user') || '{}');
+                    localStorage.setItem('kd_user', JSON.stringify({ ...existing, ...userResult.data, name: resolvedName }));
+                } catch {
+                    // no-op
+                }
+            }
+        };
+
+        loadUser();
+    }, []);
 
     useEffect(() => {
         const load = async () => {
@@ -262,16 +292,12 @@ const Home = ({ t }) => {
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24">
-            <MobileLayout t={t}>
+            <MobileLayout t={t} hideHeaderLocation>
                 <div className="pt-4 pb-6 px-1 flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-black text-gray-900 leading-tight">
-                            {t('greeting_prefix') || 'Hello'}, <span className="text-green-600">{t('user_greeting') || 'Farmer!'}</span>
+                            {t('greeting_prefix') || 'Hello'}, <span className="text-green-600">{userName || t('user_greeting') || 'Farmer'}</span>
                         </h2>
-                        <div className="flex items-center gap-1 text-gray-500 mt-1">
-                            <MapPin size={14} className="text-orange-500" />
-                            <span className="text-xs font-bold tracking-wide uppercase">{locationLabel}</span>
-                        </div>
                     </div>
                     <button onClick={() => setIsNotificationsOpen((prev) => !prev)} className="relative p-2.5 bg-white rounded-2xl shadow-sm border border-gray-100 active:scale-90 transition-transform">
                         <Bell size={20} className="text-gray-700" />
