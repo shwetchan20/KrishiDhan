@@ -292,7 +292,7 @@ const Home = ({ t }) => {
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24">
-            <MobileLayout t={t} hideHeaderLocation>
+            <MobileLayout t={t}>
                 <div className="pt-4 pb-6 px-1 flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-black text-gray-900 leading-tight">

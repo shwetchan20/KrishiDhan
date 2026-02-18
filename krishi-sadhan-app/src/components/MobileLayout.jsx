@@ -10,8 +10,8 @@ const MobileLayout = ({ children, t, hideHeaderLocation = false }) => {
 
     const locationLabel = (() => {
         try {
-            const user = JSON.parse(localStorage.getItem('kd_user') || '{}');
-            if (user?.city) return user.city;
+            const liveCity = localStorage.getItem('kd_live_city');
+            if (liveCity) return liveCity;
 
             const coords = JSON.parse(localStorage.getItem('kd_user_coords') || 'null');
             if (coords?.lat && coords?.lng) {
