@@ -1,4 +1,4 @@
-const CACHE_NAME = 'krishidhan-v1';
+const CACHE_NAME = 'krishidhan-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
