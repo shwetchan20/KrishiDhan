@@ -216,7 +216,7 @@ const Profile = ({ t, setLang, currentLang }) => {
                         </div>
 
                         <div className="flex gap-2 pl-12">
-                            {['en', 'hi', 'mr'].map((l) => (
+                            {['en', 'hi', 'mr', 'kn'].map((l) => (
                                 <button
                                     key={l}
                                     onClick={() => setLang(l)}
