@@ -13,6 +13,11 @@ const CATEGORY_LABELS_BY_LANG = {
         sowing_machine: 'Sowing Machine',
         thresing_machine: 'Thresing Machine',
         rotar: 'Rotar',
+        aerial_digital_agri_tech: 'Aerial & Digital Agriculture Tech',
+        advanced_harvesting_machinery: 'Advanced Harvesting Machinery',
+        precision_land_preparation_planting: 'Precision Land Preparation & Planting Machines',
+        orchard_high_value_crop_equipment: 'Orchard & High-Value Crop Equipment',
+        post_harvest_processing_infrastructure: 'Post-Harvest & Processing Infrastructure',
     },
     hi: {
         tractor: 'ट्रैक्टर',
@@ -51,6 +56,11 @@ const Categories = ({ t }) => {
         { id: 6, key: 'sowing_machine', icon: <Sprout size={28} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
         { id: 7, key: 'thresing_machine', icon: <Shovel size={28} />, color: 'bg-purple-50 text-purple-600 border-purple-100' },
         { id: 8, key: 'rotar', icon: <RotateCcw size={28} />, color: 'bg-lime-50 text-lime-700 border-lime-100' },
+        { id: 9, key: 'aerial_digital_agri_tech', icon: <Wind size={28} />, color: 'bg-sky-50 text-sky-600 border-sky-100' },
+        { id: 10, key: 'advanced_harvesting_machinery', icon: <Truck size={28} />, color: 'bg-teal-50 text-teal-600 border-teal-100' },
+        { id: 11, key: 'precision_land_preparation_planting', icon: <Shovel size={28} />, color: 'bg-indigo-50 text-indigo-600 border-indigo-100' },
+        { id: 12, key: 'orchard_high_value_crop_equipment', icon: <Sprout size={28} />, color: 'bg-rose-50 text-rose-600 border-rose-100' },
+        { id: 13, key: 'post_harvest_processing_infrastructure', icon: <Hammer size={28} />, color: 'bg-amber-50 text-amber-600 border-amber-100' },
     ];
 
     return (

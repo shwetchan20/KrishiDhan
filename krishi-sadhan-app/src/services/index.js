@@ -4,4 +4,13 @@ export { createListing, getListings, getListingById, deleteListing } from './lis
 export { createRequest, getRequests, updateRequestStatus, updatePaymentStatus, deleteRequest } from './requestService';
 export { createListingFlow, createListingWithImages } from './createListingFlow';
 export { getImpactMetrics } from './impactService';
-export { getRentRateByCategory, getAllowedRentUnits, CATEGORY_LABELS, RENT_RATE_CARD } from './rateCard';
+export {
+    getRentRateByCategory,
+    getAllowedRentUnits,
+    CATEGORY_LABELS,
+    RENT_RATE_CARD,
+    isOwnerPricedRentCategory,
+    LOGISTICS_RATE_PER_KM,
+    PLATFORM_FEE_RATE,
+} from './rateCard';
+export { getEquipmentByCategory, EQUIPMENT_BY_CATEGORY } from './equipmentCatalog';

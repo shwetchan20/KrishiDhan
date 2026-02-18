@@ -2,10 +2,38 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, ShieldCheck, Trash2 } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import { createRequest, deleteListing, getAllowedRentUnits, getListingById, getRentRateByCategory, getUser } from '../services';
+import {
+    createRequest,
+    deleteListing,
+    getAllowedRentUnits,
+    getListingById,
+    getRentRateByCategory,
+    getUser,
+    isOwnerPricedRentCategory,
+    LOGISTICS_RATE_PER_KM,
+    PLATFORM_FEE_RATE,
+} from '../services';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const getCurrentLang = () => localStorage.getItem('kd_lang') || 'en';
+const formatCategoryLabel = (value) =>
+    String(value || '')
+        .replace(/_/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+const toRad = (value) => (value * Math.PI) / 180;
+const haversineKm = (lat1, lon1, lat2, lon2) => {
+    const earthRadiusKm = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return earthRadiusKm * c;
+};
 
 const CATEGORY_LABELS_BY_LANG = {
     en: {
@@ -17,6 +45,11 @@ const CATEGORY_LABELS_BY_LANG = {
         sowing_machine: 'Sowing Machine',
         thresing_machine: 'Thresing Machine',
         rotar: 'Rotar',
+        aerial_digital_agri_tech: 'Aerial & Digital Agriculture Tech',
+        advanced_harvesting_machinery: 'Advanced Harvesting Machinery',
+        precision_land_preparation_planting: 'Precision Land Preparation & Planting Machines',
+        orchard_high_value_crop_equipment: 'Orchard & High-Value Crop Equipment',
+        post_harvest_processing_infrastructure: 'Post-Harvest & Processing Infrastructure',
     },
     hi: {
         tractor: 'ट्रैक्टर',
@@ -85,6 +118,14 @@ const EquipmentDetails = ({ t }) => {
     const [success, setSuccess] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [userCoords] = useState(() => {
+        try {
+            const raw = localStorage.getItem('kd_user_coords');
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    });
 
     const [bookingMode, setBookingMode] = useState('day');
     const [dayStartDate, setDayStartDate] = useState('');
@@ -126,6 +167,19 @@ const EquipmentDetails = ({ t }) => {
 
     const rateCard = getRentRateByCategory(item?.category);
     const availableBookingModes = item?.listingType === 'rent' ? getAllowedRentUnits(item?.category) : [];
+    const isOwnerPricedRent = isOwnerPricedRentCategory(item?.category);
+    const listingDistanceKm = useMemo(() => {
+        if (!userCoords || !item) return 0;
+        const hasUser = Number.isFinite(Number(userCoords.lat)) && Number.isFinite(Number(userCoords.lng));
+        const hasListing = Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lng));
+        if (!hasUser || !hasListing) return 0;
+        return haversineKm(
+            Number(userCoords.lat),
+            Number(userCoords.lng),
+            Number(item.lat),
+            Number(item.lng)
+        );
+    }, [userCoords, item]);
 
     useEffect(() => {
         if (availableBookingModes.length > 0) {
@@ -176,7 +230,8 @@ const EquipmentDetails = ({ t }) => {
             const validRange = start && end && end >= start;
             const days = validRange ? Math.floor((end.getTime() - start.getTime()) / DAY_MS) + 1 : 0;
             const baseCost = days * dayRate;
-            const platformFee = Math.round(baseCost * 0.05);
+            const travelCost = isOwnerPricedRent ? Math.round(listingDistanceKm * LOGISTICS_RATE_PER_KM) : 0;
+            const platformFee = Math.round((baseCost + travelCost) * PLATFORM_FEE_RATE);
             return {
                 bookingType: 'day',
                 quantity: days,
@@ -188,9 +243,9 @@ const EquipmentDetails = ({ t }) => {
                 acresBooked: null,
                 extraMessage: '',
                 baseCost,
-                travelCost: 0,
+                travelCost,
                 platformFee,
-                totalCost: baseCost + platformFee,
+                totalCost: baseCost + travelCost + platformFee,
             };
         }
 
@@ -198,7 +253,8 @@ const EquipmentDetails = ({ t }) => {
             const hourlyRate = getRateForMode('hour');
             const hours = Number(hourCount) > 0 ? Number(hourCount) : 0;
             const baseCost = hours * hourlyRate;
-            const platformFee = Math.round(baseCost * 0.05);
+            const travelCost = isOwnerPricedRent ? Math.round(listingDistanceKm * LOGISTICS_RATE_PER_KM) : 0;
+            const platformFee = Math.round((baseCost + travelCost) * PLATFORM_FEE_RATE);
             return {
                 bookingType: 'hour',
                 quantity: hours,
@@ -210,16 +266,17 @@ const EquipmentDetails = ({ t }) => {
                 acresBooked: null,
                 extraMessage: hourStartTime ? `Start time: ${hourStartTime}` : '',
                 baseCost,
-                travelCost: 0,
+                travelCost,
                 platformFee,
-                totalCost: baseCost + platformFee,
+                totalCost: baseCost + travelCost + platformFee,
             };
         }
 
         const selectedRate = getRateForMode(bookingMode);
         const quantity = Number(unitCount) > 0 ? Number(unitCount) : 0;
         const baseCost = quantity * selectedRate;
-        const platformFee = Math.round(baseCost * 0.05);
+        const travelCost = isOwnerPricedRent ? Math.round(listingDistanceKm * LOGISTICS_RATE_PER_KM) : 0;
+        const platformFee = Math.round((baseCost + travelCost) * PLATFORM_FEE_RATE);
         return {
             bookingType: bookingMode,
             quantity,
@@ -231,16 +288,16 @@ const EquipmentDetails = ({ t }) => {
             acresBooked: bookingMode === 'acre' ? quantity || null : null,
             extraMessage: '',
             baseCost,
-            travelCost: 0,
+            travelCost,
             platformFee,
-            totalCost: baseCost + platformFee,
+            totalCost: baseCost + travelCost + platformFee,
         };
-    }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, unitDate, unitCount, rateCard]);
+    }, [item, bookingMode, dayStartDate, dayEndDate, hourDate, hourStartTime, hourCount, unitDate, unitCount, rateCard, isOwnerPricedRent, listingDistanceKm]);
 
     const currentLang = getCurrentLang();
     const modeLabels = MODE_LABELS_BY_LANG[currentLang] || MODE_LABELS_BY_LANG.en;
     const categoryLabels = CATEGORY_LABELS_BY_LANG[currentLang] || CATEGORY_LABELS_BY_LANG.en;
-    const localizedCategory = categoryLabels[String(item?.category || '').toLowerCase()] || item?.category;
+    const localizedCategory = categoryLabels[String(item?.category || '').toLowerCase()] || formatCategoryLabel(item?.category);
 
     const getWhatsAppPhone = (phone) => {
         const digits = String(phone || '').replace(/\D/g, '');
@@ -328,7 +385,7 @@ const EquipmentDetails = ({ t }) => {
         setSubmitting(true);
 
         const bookingSummary = item.listingType === 'rent'
-            ? `Type:${computed.bookingType}, Qty:${computed.quantity}, Base:${computed.baseCost}, Platform:${computed.platformFee}, Total:${computed.totalCost}`
+            ? `Type:${computed.bookingType}, Qty:${computed.quantity}, DistanceKm:${listingDistanceKm.toFixed(1)}, Base:${computed.baseCost}, Logistics:${computed.travelCost}, Platform:${computed.platformFee}, Total:${computed.totalCost}`
             : '';
         const result = await createRequest({
             listingId: item.id,
@@ -516,6 +573,7 @@ const EquipmentDetails = ({ t }) => {
                                     <p>{t('rate')}: Rs {computed.selectedRate}/{computed.bookingType || '-'}</p>
                                     <p>{t('quantity')}: {computed.quantity || 0}</p>
                                     <p>{t('base_cost')}: Rs {computed.baseCost}</p>
+                                    {isOwnerPricedRent && <p>Logistics ({listingDistanceKm.toFixed(1)} km): Rs {computed.travelCost}</p>}
                                     <p>{t('platform_fee')}: Rs {computed.platformFee}</p>
                                     <p className="font-bold text-green-700">{t('estimated_total')}: Rs {computed.totalCost}</p>
                                 </div>
