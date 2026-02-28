@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Calendar } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import { getListings, getRequests, updateRequestStatus } from '../services';
+import { deleteRequest, getListings, getRequests, updateRequestStatus } from '../services';
 
 const MyOrders = ({ t }) => {
     const navigate = useNavigate();
@@ -146,6 +146,25 @@ const MyOrders = ({ t }) => {
         await reloadOrders();
     };
 
+    const handleDeleteHistory = async (requestId) => {
+        const uid = localStorage.getItem('kd_uid');
+        if (!uid) {
+            navigate('/login');
+            return;
+        }
+
+        setActionLoadingId(requestId);
+        const result = await deleteRequest({ requestId, actorId: uid });
+        setActionLoadingId('');
+
+        if (!result.ok) {
+            setError(result.message || 'Failed to delete history');
+            return;
+        }
+
+        await reloadOrders();
+    };
+
     const filteredOrders = useMemo(() => {
         return orders
             .filter((order) => order.role === viewTab)
@@ -254,6 +273,15 @@ const MyOrders = ({ t }) => {
                                                     className="text-[10px] px-2 py-1 rounded-md bg-blue-600 text-white font-bold disabled:opacity-60"
                                                 >
                                                     {t('mark_completed')}
+                                                </button>
+                                            )}
+                                            {activeTab === 'history' && (
+                                                <button
+                                                    onClick={() => handleDeleteHistory(item.id)}
+                                                    disabled={actionLoadingId === item.id}
+                                                    className="text-[10px] px-2 py-1 rounded-md bg-red-600 text-white font-bold disabled:opacity-60"
+                                                >
+                                                    {t('delete_history') || 'Delete History'}
                                                 </button>
                                             )}
                                         </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Grid, ShoppingBag, User, MapPin, Plus } from 'lucide-react';
 
-const MobileLayout = ({ children, t }) => {
+const MobileLayout = ({ children, t, hideHeaderLocation = false }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -10,8 +10,8 @@ const MobileLayout = ({ children, t }) => {
 
     const locationLabel = (() => {
         try {
-            const user = JSON.parse(localStorage.getItem('kd_user') || '{}');
-            if (user?.city) return user.city;
+            const liveCity = localStorage.getItem('kd_live_city');
+            if (liveCity) return liveCity;
 
             const coords = JSON.parse(localStorage.getItem('kd_user_coords') || 'null');
             if (coords?.lat && coords?.lng) {
@@ -38,10 +38,12 @@ const MobileLayout = ({ children, t }) => {
                 </div>
 
                 <div className="w-12 flex justify-end">
-                    <div className="flex items-center gap-1 bg-green-50 px-2.5 py-1 rounded-2xl border border-green-100/50">
-                        <MapPin size={10} className="text-green-700" />
-                        <span className="text-[9px] font-black text-green-800 uppercase tracking-tight truncate max-w-14">{locationLabel}</span>
-                    </div>
+                    {!hideHeaderLocation && (
+                        <div className="flex items-center gap-1 bg-green-50 px-2.5 py-1 rounded-2xl border border-green-100/50">
+                            <MapPin size={10} className="text-green-700" />
+                            <span className="text-[9px] font-black text-green-800 uppercase tracking-tight truncate max-w-14">{locationLabel}</span>
+                        </div>
+                    )}
                 </div>
             </header>
 
