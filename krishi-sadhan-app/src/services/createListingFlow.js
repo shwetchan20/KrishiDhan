@@ -1,17 +1,18 @@
-import { uploadImages } from './cloudinaryService';
-import { createListing } from './listingService';
-import { ServiceErrorCode, fail } from './errors';
+import { uploadImages } from "./cloudinaryService";
+import { createListing } from "./listingService";
 
-export async function createListingFlow({ listingData, files }) {
-    const uploadResult = await uploadImages(files);
-    if (!uploadResult.ok) return uploadResult;
+export async function createListingWithImages(formData, files) {
 
-    const images = uploadResult.data;
-    if (!Array.isArray(images)) {
-        return fail(ServiceErrorCode.UPLOAD_ERROR, 'uploadImages must return an array');
-    }
+    const imageUrls = await uploadImages(files);
 
-    return createListing({ ...listingData, images });
+    const listingData = {
+        ...formData,
+        images: imageUrls
+    };
+
+    return await createListing(listingData);
+
 }
 
-export const createListingWithImages = createListingFlow;
+// Alias for backward compatibility
+export const createListingFlow = createListingWithImages;

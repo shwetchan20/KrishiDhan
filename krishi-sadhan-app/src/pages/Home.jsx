@@ -417,6 +417,91 @@ const Home = ({ t }) => {
                     </div>
                 </div>
 
+                {/* ================= AI Farming Advisor ================= */}
+
+                <div className="mb-8 px-1">
+
+                    <div
+                        onClick={() => navigate("/ai-consultant")}
+                        className="bg-gradient-to-r from-green-600 via-green-500 to-emerald-500 rounded-3xl p-5 shadow-xl active:scale-95 transition cursor-pointer text-white"
+                    >
+
+                        <div className="flex justify-between items-start">
+
+                            <div>
+
+                                <p className="text-xs uppercase font-bold opacity-90">
+                                    🌾 AI Powered
+                                </p>
+
+                                <h2 className="text-2xl font-black mt-1">
+                                    Voice Farming Advisor
+                                </h2>
+
+                                <p className="text-sm mt-2 opacity-90">
+                                    Voice • Weather • Market • Government Schemes
+                                </p>
+
+                            </div>
+
+                            <div className="text-5xl">
+                                🎤
+                            </div>
+
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mt-5">
+
+                            <div className="bg-white/15 rounded-xl p-3">
+
+                                <div className="text-lg">🌦</div>
+
+                                <p className="text-xs font-bold mt-1">
+                                    Weather Advice
+                                </p>
+
+                            </div>
+
+                            <div className="bg-white/15 rounded-xl p-3">
+
+                                <div className="text-lg">📈</div>
+
+                                <p className="text-xs font-bold mt-1">
+                                    Market Prices
+                                </p>
+
+                            </div>
+
+                            <div className="bg-white/15 rounded-xl p-3">
+
+                                <div className="text-lg">🌱</div>
+
+                                <p className="text-xs font-bold mt-1">
+                                    Seed Guidance
+                                </p>
+
+                            </div>
+
+                            <div className="bg-white/15 rounded-xl p-3">
+
+                                <div className="text-lg">💰</div>
+
+                                <p className="text-xs font-bold mt-1">
+                                    Govt Schemes
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <button className="mt-5 w-full bg-white text-green-700 font-black py-3 rounded-2xl">
+                            Open AI Consultant →
+                        </button>
+
+                    </div>
+
+                </div>
+
                 <div className="pb-6 px-1">
                     <div className="flex items-center gap-2 mb-5">
                         <div className="w-1.5 h-6 bg-orange-500 rounded-full"></div>
