@@ -64,7 +64,6 @@ export const translations = {
         state_schemes: "Maharashtra State Schemes",
 
         // --- Equipment Details & Booking ---
-        user_name: "Samarth Pore",
         my_listed_tools: "My Listed Tools",
         save_profile: "Save Profile",
         edit: "Edit",
@@ -165,7 +164,8 @@ export const translations = {
         alert_success: "Equipment Posted Successfully!",
         lang_en: "English",
         lang_hi: "Hindi",
-        lang_mr: "Marathi"
+        lang_mr: "Marathi",
+        lang_kn: "Kannada"
     },
     hi: {
         // --- Auth & Navigation ---
@@ -239,7 +239,6 @@ export const translations = {
         type_message: "मुझसे कुछ भी पूछें...",
 
         // --- Equipment & Booking (Hindi) ---
-        user_name: "समर्थ पोरे",
         my_listed_tools: "मेरे सूचीबद्ध उपकरण",
         save_profile: "प्रोफ़ाइल सहेजें",
         edit: "संपादन करें",
@@ -327,6 +326,7 @@ export const translations = {
         lang_en: "अंग्रेजी",
         lang_hi: "हिंदी",
         lang_mr: "मराठी",
+        lang_kn: "कन्नड",
         owner: "मालिक",
         deleting: "हटाया जा रहा है...",
         delete_listing: "विज्ञापन हटाएँ"
@@ -379,7 +379,6 @@ export const translations = {
         recommended_for_you: "तुमच्यासाठी शिफारस केलेले",
 
         // --- Equipment Details & Booking (Marathi Section) ---
-        user_name: "समर्थ पोरे",
         my_listed_tools: "माझी सूचीबद्ध अवजारे",
         save_profile: "प्रोफाईल सेव्ह करा",
         edit: "बदल करा",
@@ -474,6 +473,7 @@ export const translations = {
         lang_en: "इंग्रजी",
         lang_hi: "हिंदी",
         lang_mr: "मराठी",
+        lang_kn: "ಕನ್ನಡ",
         owner: "मालक",
         deleting: "हटवत आहे...",
         delete_listing: "जाहिरात काढून टाका",
@@ -493,5 +493,45 @@ export const translations = {
         example_tractor: "उदा. महिंद्रा ट्रॅक्टर",
         example_city: "कोल्हापूर",
         success: "यशस्वी!"
+    },
+    kn: {
+        login: "ಲಾಗಿನ್",
+        register: "ನೋಂದಣಿ",
+        home: "ಮುಖಪುಟ",
+        category: "ವರ್ಗಗಳು",
+        orders: "ಆರ್ಡರ್‌ಗಳು",
+        profile: "ಪ್ರೊಫೈಲ್",
+        post_ad: "ಜಾಹಿರಾತು ಹಾಕಿ",
+        language: "ಭಾಷೆ",
+        help: "ಸಹಾಯ",
+        logout: "ಲಾಗ್ ಔಟ್",
+        search_placeholder: "ಉಪಕರಣ ಹುಡುಕಿ...",
+        recommendations: "ಶಿಫಾರಸುಗಳು",
+        rent_badge: "ಬಾಡಿಗೆ",
+        sell_badge: "ಮಾರಾಟ",
+        price_on_sale: "ಮಾರಾಟ ಬೆಲೆ",
+        loading: "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+        book_now: "ಈಗ ಬುಕ್ ಮಾಡಿ",
+        buy_now: "ಈಗ ಖರೀದಿಸಿ",
+        whatsapp_owner: "WhatsApp ಮಾಲೀಕ",
+        booking_type: "ಬುಕಿಂಗ್ ಪ್ರಕಾರ",
+        fare_estimate: "ದರ ಅಂದಾಜು",
+        total_estimate: "ಒಟ್ಟು ಅಂದಾಜು",
+        specifications: "ವಿವರಗಳು",
+        category_label: "ವರ್ಗ",
+        location_label: "ಸ್ಥಳ",
+        owner: "ಮಾಲೀಕ",
+        deleting: "ಅಳಿಸಲಾಗುತ್ತಿದೆ...",
+        delete_listing: "ಪಟ್ಟಿ ಅಳಿಸಿ",
+        my_listed_tools: "ನನ್ನ ಪಟ್ಟಿಗೊಂಡ ಸಾಧನಗಳು",
+        save_profile: "ಪ್ರೊಫೈಲ್ ಉಳಿಸಿ",
+        edit: "ತಿದ್ದು",
+        user_name: "ಬಳಕೆದಾರ",
+        bot_greeting: "ನಮಸ್ಕಾರ! ಸಾಧನ ಪೋಸ್ಟ್, ಬುಕ್ಕಿಂಗ್, ಆರ್ಡರ್ ಟ್ರ್ಯಾಕ್ ಮತ್ತು ಯೋಜನೆಗಳ ಮಾಹಿತಿಯಲ್ಲಿ ಸಹಾಯ ಮಾಡುತ್ತೇನೆ.",
+        type_message: "ಏನಾದರೂ ಕೇಳಿ...",
+        lang_en: "ಇಂಗ್ಲಿಷ್",
+        lang_hi: "ಹಿಂದಿ",
+        lang_mr: "ಮರಾಠಿ",
+        lang_kn: "ಕನ್ನಡ"
     }
 };
