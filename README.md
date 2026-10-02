@@ -268,3 +268,5 @@ https://github.com/shwetchan20/KrishiDhan
 # Author
 
 Developed by **Shwet** as an AI-powered agricultural assistance prototype.
+
+this is sample commit
