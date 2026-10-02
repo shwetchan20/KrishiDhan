@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd krishi-sadhan-app && npm install && npm run build",
+  "outputDirectory": "krishi-sadhan-app/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

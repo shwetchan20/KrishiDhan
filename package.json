@@ -1,5 +1,10 @@
 {
   "private": true,
+  "scripts": {
+    "build": "npm run --prefix krishi-sadhan-app build",
+    "dev": "npm run --prefix krishi-sadhan-app dev",
+    "install:app": "npm install --prefix krishi-sadhan-app"
+  },
   "dependencies": {
     "firebase": "^12.9.0",
     "lucide-react": "^0.564.0",
