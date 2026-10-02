@@ -313,8 +313,6 @@ export const translations = {
         holkar_nursery: "अहिल्यादेवी होल्कर नर्सरी",
         cm_irrigation: "मुख्यमंत्री सतत सिंचाई",
 
-        active_pending: "सक्रिय",
-        history: "इतिहास",
         logout: "लॉग आउट",
         help: "सहायता",
         krishi_bot: "कृषि बॉट",

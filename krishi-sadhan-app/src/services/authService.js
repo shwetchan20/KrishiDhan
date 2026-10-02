@@ -15,7 +15,7 @@ import {
     signOut
 } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { ServiceErrorCode, fail, ok } from './errors';
+import { ServiceErrorCode, fail, ok, toErrorDetails } from './errors';
 import { validateUserPayload } from './schema';
 
 const USERS_COLLECTION = 'users';

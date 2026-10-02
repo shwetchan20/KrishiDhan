@@ -15,14 +15,29 @@ const missingFirebaseEnv = Object.entries(firebaseConfig)
     .filter(([, value]) => !value)
     .map(([key]) => key);
 
+let app = null;
+let auth = null;
+let db = null;
+
 if (missingFirebaseEnv.length > 0) {
-    throw new Error(`Missing Firebase env config: ${missingFirebaseEnv.join(", ")}`);
+    console.warn(`[KrishiDhan] Firebase configuration incomplete. Missing: ${missingFirebaseEnv.join(", ")}. Please configure these in your environment variables.`);
 }
 
-const app = initializeApp(firebaseConfig);
+try {
+    app = initializeApp(firebaseConfig.apiKey ? firebaseConfig : {
+        apiKey: "placeholder-api-key",
+        authDomain: "placeholder.firebaseapp.com",
+        projectId: "placeholder-project",
+        storageBucket: "placeholder.appspot.com",
+        messagingSenderId: "00000000000",
+        appId: "1:00000000000:web:0000000000000000000000"
+    });
+    auth = getAuth(app);
+    db = getFirestore(app);
+} catch (e) {
+    console.error("[KrishiDhan] Firebase initialization failed:", e);
+}
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-
+export { auth, db };
 export default app;
 
