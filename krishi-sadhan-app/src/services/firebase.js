@@ -38,6 +38,8 @@ try {
     console.error("[KrishiDhan] Firebase initialization failed:", e);
 }
 
-export { auth, db };
+const isFirebaseConfigured = missingFirebaseEnv.length === 0;
+
+export { auth, db, isFirebaseConfigured, missingFirebaseEnv };
 export default app;
 

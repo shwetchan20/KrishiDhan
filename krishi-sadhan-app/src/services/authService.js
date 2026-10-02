@@ -14,7 +14,7 @@ import {
     signInWithEmailAndPassword,
     signOut
 } from 'firebase/auth';
-import { auth, db } from './firebase';
+import { auth, db, isFirebaseConfigured, missingFirebaseEnv } from './firebase';
 import { ServiceErrorCode, fail, ok, toErrorDetails } from './errors';
 import { validateUserPayload } from './schema';
 
@@ -147,6 +147,14 @@ export async function registerWithEmail({ email, password, name, phone, city, ph
     }
 
     const cleanEmail = email.trim().toLowerCase();
+
+    if (!isFirebaseConfigured || !auth) {
+        return fail(
+            ServiceErrorCode.CONFIG_MISSING,
+            `Firebase configuration incomplete on server. Missing: ${missingFirebaseEnv.join(', ')}. Please add them to Vercel Environment Variables.`
+        );
+    }
+
     let uid = null;
     // 1. Attempt standard Firebase Authentication
     try {
@@ -182,7 +190,14 @@ export async function registerWithEmail({ email, password, name, phone, city, ph
         if (error.code === 'auth/weak-password') {
             return fail(ServiceErrorCode.VALIDATION_ERROR, 'Password should be at least 6 characters.');
         }
-        return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to register with Firebase Auth', toErrorDetails(error));
+        if (error.code === 'auth/operation-not-allowed') {
+            return fail(ServiceErrorCode.AUTH_ERROR, 'Email/Password sign-in is not enabled in Firebase Console. Please enable it under Authentication > Sign-in method.');
+        }
+        if (error.code === 'auth/network-request-failed') {
+            return fail(ServiceErrorCode.AUTH_ERROR, 'Network error. Please check your internet connection.');
+        }
+        const msg = error.message ? `Registration failed (${error.code || 'error'}): ${error.message}` : 'Failed to register with Firebase Auth.';
+        return fail(ServiceErrorCode.FIRESTORE_ERROR, msg, toErrorDetails(error));
     }
 }
 
@@ -196,17 +211,35 @@ export async function loginWithEmail({ email, password }) {
 
     const cleanEmail = email.trim().toLowerCase();
 
+    if (!isFirebaseConfigured || !auth) {
+        return fail(
+            ServiceErrorCode.CONFIG_MISSING,
+            `Firebase configuration incomplete on server. Missing: ${missingFirebaseEnv.join(', ')}. Please add them to Vercel Environment Variables.`
+        );
+    }
+
     // 1. Try Firebase Authentication first
     try {
         const result = await signInWithEmailAndPassword(auth, cleanEmail, password);
         const uid = result.user.uid;
 
         const userResult = await getUser(uid);
-        if (!userResult.ok) {
-            return fail(ServiceErrorCode.NOT_FOUND, 'User profile not found in database');
+        let profile = userResult.ok ? userResult.data : null;
+
+        if (!profile) {
+            // Profile doc doesn't exist yet (e.g. registered before firestore sync).
+            // Synthesize minimal profile and persist so user is not locked out.
+            profile = {
+                uid,
+                email: result.user.email,
+                name: result.user.displayName || cleanEmail.split('@')[0],
+                phone: '',
+                city: '',
+                role: 'farmer'
+            };
+            await createUser(profile);
         }
 
-        const profile = userResult.data;
         saveLocalUser(profile);
         return ok({ uid, email: result.user.email, profile });
     } catch (error) {
@@ -216,11 +249,20 @@ export async function loginWithEmail({ email, password }) {
             return fail(ServiceErrorCode.AUTH_ERROR, 'Incorrect email or password. Please verify and try again.');
         }
 
-        return fail(
-            ServiceErrorCode.FIRESTORE_ERROR,
-            'Account not found or password incorrect. Please register if you are a new user.',
-            toErrorDetails(error)
-        );
+        if (error.code === 'auth/user-not-found') {
+            return fail(ServiceErrorCode.NOT_FOUND, 'No account found with this email. Please register first.');
+        }
+
+        if (error.code === 'auth/too-many-requests') {
+            return fail(ServiceErrorCode.AUTH_ERROR, 'Access temporarily disabled due to many failed login attempts. Please reset password or try later.');
+        }
+
+        if (error.code === 'auth/network-request-failed') {
+            return fail(ServiceErrorCode.AUTH_ERROR, 'Network error. Please check your internet connection.');
+        }
+
+        const msg = error.message ? `Login failed (${error.code || 'error'}): ${error.message}` : 'Login failed. Please check credentials.';
+        return fail(ServiceErrorCode.AUTH_ERROR, msg, toErrorDetails(error));
     }
 }
 
