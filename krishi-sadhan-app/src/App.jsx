@@ -18,8 +18,6 @@ import PaymentDemo from "./pages/PaymentDemo";
 import Schemes from "./pages/Schemes";
 import ImpactDashboard from "./pages/ImpactDashboard";
 
-// IMPORTANT
-import VoiceConsultant from "./pages/VoiceConsultant";
 
 import Chatbot from "./components/Chatbot";
 
@@ -106,15 +104,6 @@ function App() {
                         }
                     />
 
-                    {/* NEW AI PAGE */}
-                    <Route
-                        path="/ai-consultant"
-                        element={
-                            <ProtectedRoute>
-                                <VoiceConsultant t={t} />
-                            </ProtectedRoute>
-                        }
-                    />
 
                     <Route
                         path="/profile"

@@ -362,12 +362,12 @@ const EquipmentDetails = ({ t }) => {
     const handleCreateRequest = async () => {
         if (!item) return;
 
-        const renterId = localStorage.getItem('kd_uid');
-        if (!renterId) {
+        const currentUserId = localStorage.getItem('kd_uid');
+        if (!currentUserId) {
             navigate('/login');
             return;
         }
-        if (renterId === item.ownerId) {
+        if (currentUserId === item.ownerId) {
             setError('You cannot request your own listing.');
             return;
         }
@@ -390,7 +390,7 @@ const EquipmentDetails = ({ t }) => {
         const result = await createRequest({
             listingId: item.id,
             ownerId: item.ownerId,
-            renterId,
+            farmerId: currentUserId,
             requestType: item.listingType === 'rent' ? 'rent' : 'buy',
             bookingType: item.listingType === 'rent' ? computed.bookingType : null,
             startDate: item.listingType === 'rent' ? computed.startDate : null,

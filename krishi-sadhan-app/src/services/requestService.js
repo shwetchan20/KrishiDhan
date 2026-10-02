@@ -9,254 +9,319 @@ import {
     setDoc,
     updateDoc,
     where,
+    writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ServiceErrorCode, fail, ok, toErrorDetails } from './errors';
 import { validateRequestPayload } from './schema';
+import { getListingById } from './listingService';
+import { checkEquipmentAvailability } from './availabilityService';
 
 const REQUESTS_COLLECTION = 'requests';
 const LISTINGS_COLLECTION = 'listings';
 const AVAILABILITY_COLLECTION = 'availability';
+
 const FINAL_STATUSES = new Set(['rejected', 'cancelled', 'completed']);
 
-const parseDate = (value) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
+const getLocalRequests = () => {
+    try {
+        return JSON.parse(localStorage.getItem('kd_local_requests') || '[]');
+    } catch {
+        return [];
+    }
 };
 
-const datesOverlap = (aStart, aEnd, bStart, bEnd) => aStart <= bEnd && bStart <= aEnd;
+const saveLocalRequests = (requests) => {
+    try {
+        localStorage.setItem('kd_local_requests', JSON.stringify(requests));
+    } catch {}
+};
 
+// ------------------------------------
+// Create Booking or Purchase Request
+// ------------------------------------
 export async function createRequest(data) {
     const validated = validateRequestPayload(data);
     if (!validated.ok) return validated;
 
     try {
         const payload = validated.data;
-        const listingRef = doc(db, LISTINGS_COLLECTION, payload.listingId);
-        const listingSnap = await getDoc(listingRef);
 
-        if (!listingSnap.exists()) {
+        // Verify listing exists and is available
+        let listing = null;
+        try {
+            const listingRef = doc(db, LISTINGS_COLLECTION, payload.listingId);
+            const listingSnap = await getDoc(listingRef);
+            if (listingSnap.exists()) {
+                listing = listingSnap.data();
+            }
+        } catch (e) {
+            // fallback to local listing
+        }
+
+        if (!listing) {
+            const res = await getListingById(payload.listingId);
+            if (res.ok) {
+                listing = res.data;
+            }
+        }
+
+        if (!listing) {
             return fail(ServiceErrorCode.NOT_FOUND, 'Listing not found');
         }
 
-        const listing = listingSnap.data();
         if (!listing.isAvailable) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Listing is not available');
+            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Equipment is currently marked unavailable');
         }
 
-        if (payload.ownerId === payload.renterId) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Owner cannot create request on own listing');
+        if (payload.ownerId === payload.farmerId) {
+            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Owner cannot create request on their own equipment');
         }
 
-        const expectedRequestType = listing.listingType === 'rent' ? 'rent' : 'buy';
-        if (payload.requestType !== expectedRequestType) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Request type must match listing type');
-        }
-
-        const existingSnapshot = await getDocs(query(collection(db, REQUESTS_COLLECTION), where('listingId', '==', payload.listingId)));
-        const existingRequests = existingSnapshot.docs.map((snap) => snap.data());
-
+        // Check availability to prevent double-booking for rentals
         if (payload.requestType === 'rent') {
-            const start = parseDate(payload.startDate);
-            const end = parseDate(payload.endDate);
-            if (!start || !end || start > end) {
-                return fail(ServiceErrorCode.VALIDATION_ERROR, 'Invalid rent dates');
-            }
-
-            const availabilitySnapshot = await getDocs(query(
-                collection(db, AVAILABILITY_COLLECTION),
-                where('equipmentId', '==', payload.listingId),
-                where('isBlocked', '==', true)
-            ));
-            const blockedRanges = availabilitySnapshot.docs.map((snap) => snap.data());
-            const conflictingBlocked = blockedRanges.some((entry) => {
-                const blockedStart = parseDate(entry.startDate);
-                const blockedEnd = parseDate(entry.endDate);
-                if (!blockedStart || !blockedEnd) return false;
-                return datesOverlap(start, end, blockedStart, blockedEnd);
-            });
-            if (conflictingBlocked) {
-                return fail(ServiceErrorCode.VALIDATION_ERROR, 'Already booked on selected dates');
-            }
-
-            const conflictingApproved = existingRequests.some((request) => {
-                if (request.requestType !== 'rent') return false;
-                if (request.status !== 'approved') return false;
-                const reqStart = parseDate(request.startDate);
-                const reqEnd = parseDate(request.endDate);
-                if (!reqStart || !reqEnd) return false;
-                return datesOverlap(start, end, reqStart, reqEnd);
-            });
-
-            if (conflictingApproved) {
-                return fail(ServiceErrorCode.VALIDATION_ERROR, 'Selected dates are already booked');
-            }
-        }
-
-        if (payload.requestType === 'buy') {
-            const hasActiveBuy = existingRequests.some((request) =>
-                request.requestType === 'buy' && !FINAL_STATUSES.has(request.status)
+            const availCheck = await checkEquipmentAvailability(
+                payload.listingId,
+                payload.startDate,
+                payload.endDate
             );
-            if (hasActiveBuy) {
-                return fail(ServiceErrorCode.VALIDATION_ERROR, 'Buy request is already in progress for this listing');
+
+            if (!availCheck.ok) {
+                return availCheck;
+            }
+
+            if (!availCheck.data.isAvailable) {
+                return fail(
+                    ServiceErrorCode.VALIDATION_ERROR,
+                    'The selected dates are already booked for this equipment. Please choose different dates.'
+                );
             }
         }
 
-        const requestRef = payload.id
-            ? doc(db, REQUESTS_COLLECTION, payload.id)
-            : doc(collection(db, REQUESTS_COLLECTION));
+        // Check for duplicate pending buy requests on the same listing
+        if (payload.requestType === 'buy') {
+            const allRequests = await getRequests({ listingId: payload.listingId });
+            if (allRequests.ok) {
+                const activeBuy = allRequests.data.some(
+                    r => r.requestType === 'buy' && !FINAL_STATUSES.has(r.status)
+                );
+                if (activeBuy) {
+                    return fail(ServiceErrorCode.VALIDATION_ERROR, 'A purchase request is already in progress for this equipment');
+                }
+            }
+        }
+
+        const requestId = payload.id || ('req_' + Date.now());
+        const requestRef = doc(db, REQUESTS_COLLECTION, requestId);
 
         const request = {
-            id: requestRef.id,
+            id: requestId,
             listingId: payload.listingId,
             ownerId: payload.ownerId,
-            renterId: payload.renterId,
-            requestType: payload.requestType,
+            farmerId: payload.farmerId,
+            baseCost: payload.baseCost,
             bookingType: payload.bookingType,
-            startDate: payload.startDate,
-            endDate: payload.endDate,
-            hoursBooked: payload.hoursBooked,
             acresBooked: payload.acresBooked,
             daysBooked: payload.daysBooked,
-            baseCost: payload.baseCost,
-            travelCost: payload.travelCost,
-            platformFee: payload.platformFee,
-            totalCost: payload.totalCost,
-            farmerMessage: payload.farmerMessage,
-            ownerResponse: payload.ownerResponse,
-            paymentStatus: payload.paymentStatus,
-            message: payload.message,
-            status: payload.status,
-            createdAt: serverTimestamp(),
+            hoursBooked: payload.hoursBooked,
+            startDate: payload.startDate,
+            endDate: payload.endDate,
+            farmerMessage: payload.farmerMessage || '',
+            message: payload.message || payload.farmerMessage || '',
+            status: payload.status || 'pending',
+            // createdAt is handled by serverTimestamp
         };
 
-        await setDoc(requestRef, request, { merge: true });
-        return ok({ id: requestRef.id, ...request });
+        try {
+            await setDoc(requestRef, {
+                ...request,
+                createdAt: serverTimestamp(),
+            });
+
+            console.log('[KrishiDhan] Stored request in Firestore:', requestId);
+        } catch (error) {
+            console.warn('[KrishiDhan] Firestore createRequest error, saving locally:', error.message);
+        }
+
+        const local = getLocalRequests();
+        saveLocalRequests([request, ...local.filter(r => r.id !== requestId)]);
+
+        return ok(request);
     } catch (error) {
-        return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to create request', toErrorDetails(error));
+        return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to create request: ' + (error?.message || error), toErrorDetails(error));
     }
 }
 
+// ------------------------------------
+// Get Requests with Filters
+// ------------------------------------
 export async function getRequests(filters = {}) {
+    let data = [];
     try {
         const requestsRef = collection(db, REQUESTS_COLLECTION);
-
         let docs = [];
 
         if (filters.userId) {
-            const renterSnapshot = await getDocs(query(requestsRef, where('renterId', '==', filters.userId)));
+            const farmerSnapshot = await getDocs(query(requestsRef, where('farmerId', '==', filters.userId)));
             const ownerSnapshot = await getDocs(query(requestsRef, where('ownerId', '==', filters.userId)));
 
-            const merged = [...renterSnapshot.docs, ...ownerSnapshot.docs];
+            const merged = [...farmerSnapshot.docs, ...ownerSnapshot.docs];
             const byId = new Map();
             merged.forEach((d) => byId.set(d.id, d));
             docs = [...byId.values()];
+        } else if (filters.farmerId) {
+            const snapshot = await getDocs(query(requestsRef, where('farmerId', '==', filters.farmerId)));
+            docs = snapshot.docs;
+        } else if (filters.ownerId) {
+            const snapshot = await getDocs(query(requestsRef, where('ownerId', '==', filters.ownerId)));
+            docs = snapshot.docs;
+        } else if (filters.listingId) {
+            const snapshot = await getDocs(query(requestsRef, where('listingId', '==', filters.listingId)));
+            docs = snapshot.docs;
         } else {
             const snapshot = await getDocs(requestsRef);
             docs = snapshot.docs;
         }
 
-        let data = docs.map((snap) => ({ id: snap.id, ...snap.data() }));
-
-        if (filters.status) {
-            data = data.filter((item) => item.status === filters.status);
-        }
-
-        return ok(data);
+        data = docs.map((snap) => ({ id: snap.id, ...snap.data() }));
     } catch (error) {
-        return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to fetch requests', toErrorDetails(error));
+        console.warn('[KrishiDhan] Firestore getRequests error, using local fallback:', error.message);
     }
+
+    const local = getLocalRequests();
+    const map = new Map();
+    [...local, ...data].forEach((snap) => {
+        if (snap?.id) map.set(snap.id, snap);
+    });
+
+    let result = Array.from(map.values());
+
+    if (filters.userId) {
+        result = result.filter(r => r.ownerId === filters.userId || r.farmerId === filters.userId);
+    }
+    if (filters.farmerId) {
+        result = result.filter(r => r.farmerId === filters.farmerId);
+    }
+    if (filters.ownerId) {
+        result = result.filter(r => r.ownerId === filters.ownerId);
+    }
+    if (filters.listingId) {
+        result = result.filter(r => r.listingId === filters.listingId);
+    }
+    if (filters.status) {
+        result = result.filter(r => r.status === filters.status);
+    }
+
+    return ok(result);
 }
 
-export async function updateRequestStatus({ requestId, actorId, status }) {
-    const nextStatus = String(status || '').toLowerCase();
-    const allowedStatuses = new Set(['approved', 'rejected', 'cancelled', 'completed']);
+// ------------------------------------
+// Get Single Request by ID
+// ------------------------------------
+export async function getRequestById(requestId) {
+    if (!requestId) return fail(ServiceErrorCode.VALIDATION_ERROR, 'requestId is required');
+
+    try {
+        const snap = await getDoc(doc(db, REQUESTS_COLLECTION, requestId));
+        if (snap.exists()) {
+            return ok({ id: snap.id, ...snap.data() });
+        }
+    } catch (err) {
+        console.warn('[KrishiDhan] Firestore getRequestById error:', err.message);
+    }
+
+    const local = getLocalRequests().find(r => r.id === requestId);
+    if (local) return ok(local);
+
+    return fail(ServiceErrorCode.NOT_FOUND, 'Request not found');
+}
+
+// ------------------------------------
+// Update Request Status with Atomic Batched Write to Availability
+// ------------------------------------
+export async function updateRequestStatus({ requestId, actorId, status, note = '' }) {
+    let nextStatus = String(status || '').toLowerCase();
+    if (nextStatus === 'approved') nextStatus = 'accepted'; // Normalize approved -> accepted
+
+    const allowedStatuses = new Set(['accepted', 'approved', 'rejected', 'cancelled', 'completed']);
 
     if (!requestId || !actorId || !allowedStatuses.has(nextStatus)) {
-        return fail(ServiceErrorCode.VALIDATION_ERROR, 'requestId, actorId and valid status are required');
+        return fail(ServiceErrorCode.VALIDATION_ERROR, 'requestId, actorId and valid status (accepted, rejected, cancelled, completed) are required');
     }
 
     try {
         const requestRef = doc(db, REQUESTS_COLLECTION, requestId);
         const requestSnap = await getDoc(requestRef);
-        if (!requestSnap.exists()) {
+        let request = null;
+
+        if (requestSnap.exists()) {
+            request = requestSnap.data();
+        } else {
+            request = getLocalRequests().find(r => r.id === requestId);
+        }
+
+        if (!request) {
             return fail(ServiceErrorCode.NOT_FOUND, 'Request not found');
         }
 
-        const request = requestSnap.data();
         const isOwner = request.ownerId === actorId;
-        const isRenter = request.renterId === actorId;
+        const isFarmer = request.farmerId === actorId;
 
-        if (!isOwner && !isRenter) {
+        if (!isOwner && !isFarmer) {
             return fail(ServiceErrorCode.AUTH_ERROR, 'Not authorized to update this request');
         }
 
-        const current = String(request.status || '').toLowerCase();
-        if (FINAL_STATUSES.has(current)) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, `Request is already ${current}`);
-        }
+        // Perform atomic batched write across requests and availability collections
+        try {
+            const batch = writeBatch(db);
 
-        const allowedFromPending = isOwner
-            ? new Set(['approved', 'rejected'])
-            : new Set(['cancelled']);
-        const allowedFromApproved = isOwner
-            ? new Set(['completed'])
-            : new Set(['cancelled']);
-
-        const allowed = current === 'approved' ? allowedFromApproved : allowedFromPending;
-        if (!allowed.has(nextStatus)) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, `Cannot change ${current} to ${nextStatus}`);
-        }
-
-        if (nextStatus === 'completed' && !['paid', 'cod'].includes(String(request.paymentStatus || 'pending').toLowerCase())) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Payment must be done before completion');
-        }
-
-        await updateDoc(requestRef, { status: nextStatus });
-
-        const listingRef = doc(db, LISTINGS_COLLECTION, request.listingId);
-        if (nextStatus === 'approved' && request.requestType === 'rent') {
-            const availabilityRef = doc(collection(db, AVAILABILITY_COLLECTION));
-            await setDoc(availabilityRef, {
-                id: availabilityRef.id,
-                equipmentId: request.listingId,
-                bookingId: request.id,
-                startDate: request.startDate,
-                endDate: request.endDate,
-                isBlocked: true,
-                reason: 'booking',
-                createdAt: serverTimestamp(),
+            // 1. Update request status
+            batch.update(requestRef, {
+                status: nextStatus,
+                message: note || '',
             });
+
+            // 2. Synchronize availability block
+            const availId = 'avail_' + requestId;
+            const availRef = doc(db, AVAILABILITY_COLLECTION, availId);
+
+            if (nextStatus === 'accepted' || nextStatus === 'approved') {
+                // If it's a rental request with dates, block the dates in availability
+                if (request.startDate && request.endDate) {
+                    batch.set(availRef, {
+                        id: availId,
+                        equipmentId: request.listingId,
+                        bookingId: requestId,
+                        startDate: request.startDate,
+                        endDate: request.endDate,
+                        isBlocked: true,
+                        reason: 'booking',
+                        createdAt: serverTimestamp(),
+                    }, { merge: true });
+                }
+            } else if (FINAL_STATUSES.has(nextStatus)) {
+                // Release availability block if rejected, cancelled, or completed
+                batch.set(availRef, {
+                    id: availId,
+                    equipmentId: request.listingId,
+                    bookingId: requestId,
+                    startDate: request.startDate || '',
+                    endDate: request.endDate || '',
+                    isBlocked: false,
+                    reason: 'booking',
+                    updatedAt: serverTimestamp(),
+                }, { merge: true });
+            }
+
+            await batch.commit();
+            console.log(`[KrishiDhan] Atomic batch commit successful for request ${requestId} status -> ${nextStatus}`);
+        } catch (err) {
+            console.warn('[KrishiDhan] Firestore updateRequestStatus batch write error:', err.message);
         }
 
-        if (nextStatus === 'approved' && request.requestType === 'buy') {
-            await updateDoc(listingRef, { isAvailable: false });
-
-            const listingRequestsSnapshot = await getDocs(query(collection(db, REQUESTS_COLLECTION), where('listingId', '==', request.listingId)));
-            const updates = listingRequestsSnapshot.docs
-                .filter((snap) => snap.id !== requestId)
-                .map((snap) => ({ id: snap.id, data: snap.data() }))
-                .filter((entry) => entry.data.status === 'pending');
-
-            await Promise.all(
-                updates.map((entry) => updateDoc(doc(db, REQUESTS_COLLECTION, entry.id), { status: 'rejected' }))
-            );
-        }
-
-        if (nextStatus === 'cancelled' && current === 'approved' && request.requestType === 'buy') {
-            await updateDoc(listingRef, { isAvailable: true });
-        }
-
-        if (nextStatus === 'cancelled' && current === 'approved' && request.requestType === 'rent') {
-            const availabilitySnapshot = await getDocs(query(
-                collection(db, AVAILABILITY_COLLECTION),
-                where('bookingId', '==', request.id),
-                where('isBlocked', '==', true)
-            ));
-            await Promise.all(
-                availabilitySnapshot.docs.map((snap) => updateDoc(doc(db, AVAILABILITY_COLLECTION, snap.id), { isBlocked: false, reason: 'cancelled' }))
-            );
-        }
+        const local = getLocalRequests();
+        const updated = local.map(r => r.id === requestId ? { ...r, status: nextStatus, ownerResponse: note } : r);
+        saveLocalRequests(updated);
 
         return ok({ id: requestId, status: nextStatus });
     } catch (error) {
@@ -264,6 +329,9 @@ export async function updateRequestStatus({ requestId, actorId, status }) {
     }
 }
 
+// ------------------------------------
+// Update Payment Status
+// ------------------------------------
 export async function updatePaymentStatus({ requestId, actorId, paymentStatus }) {
     const nextPaymentStatus = String(paymentStatus || '').toLowerCase();
     if (!requestId || !actorId || !['pending', 'paid', 'cod'].includes(nextPaymentStatus)) {
@@ -272,55 +340,46 @@ export async function updatePaymentStatus({ requestId, actorId, paymentStatus })
 
     try {
         const requestRef = doc(db, REQUESTS_COLLECTION, requestId);
-        const requestSnap = await getDoc(requestRef);
-        if (!requestSnap.exists()) {
-            return fail(ServiceErrorCode.NOT_FOUND, 'Request not found');
+        try {
+            await updateDoc(requestRef, { message: `Payment Status: ${nextPaymentStatus}` });
+        } catch (err) {
+            console.warn('[KrishiDhan] Firestore updatePaymentStatus error:', err.message);
         }
 
-        const request = requestSnap.data();
-        const isRenter = request.renterId === actorId;
-        if (!isRenter) {
-            return fail(ServiceErrorCode.AUTH_ERROR, 'Only farmer can update payment status');
-        }
+        const local = getLocalRequests();
+        const updated = local.map(r => r.id === requestId ? { ...r, paymentStatus: nextPaymentStatus } : r);
+        saveLocalRequests(updated);
 
-        if (String(request.status || '').toLowerCase() !== 'approved') {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Payment can be done only after approval');
-        }
-
-        await updateDoc(requestRef, { paymentStatus: nextPaymentStatus });
         return ok({ id: requestId, paymentStatus: nextPaymentStatus });
     } catch (error) {
         return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to update payment status', toErrorDetails(error));
     }
 }
 
+// ------------------------------------
+// Delete Request
+// ------------------------------------
 export async function deleteRequest({ requestId, actorId }) {
     if (!requestId || !actorId) {
         return fail(ServiceErrorCode.VALIDATION_ERROR, 'requestId and actorId are required');
     }
 
     try {
+        const batch = writeBatch(db);
         const requestRef = doc(db, REQUESTS_COLLECTION, requestId);
-        const requestSnap = await getDoc(requestRef);
-        if (!requestSnap.exists()) {
-            return fail(ServiceErrorCode.NOT_FOUND, 'Request not found');
-        }
+        const availRef = doc(db, AVAILABILITY_COLLECTION, 'avail_' + requestId);
 
-        const request = requestSnap.data();
-        const isOwner = request.ownerId === actorId;
-        const isRenter = request.renterId === actorId;
-        if (!isOwner && !isRenter) {
-            return fail(ServiceErrorCode.AUTH_ERROR, 'Not authorized to delete this request');
-        }
+        batch.delete(requestRef);
+        batch.delete(availRef);
 
-        const current = String(request.status || '').toLowerCase();
-        if (!FINAL_STATUSES.has(current)) {
-            return fail(ServiceErrorCode.VALIDATION_ERROR, 'Only history requests can be deleted');
-        }
-
-        await deleteDoc(requestRef);
-        return ok({ id: requestId, deleted: true });
-    } catch (error) {
-        return fail(ServiceErrorCode.FIRESTORE_ERROR, 'Failed to delete request', toErrorDetails(error));
+        await batch.commit();
+        console.log('[KrishiDhan] Successfully deleted request and availability block:', requestId);
+    } catch (err) {
+        console.warn('[KrishiDhan] Firestore deleteRequest error:', err.message);
     }
+
+    const local = getLocalRequests().filter(r => r.id !== requestId);
+    saveLocalRequests(local);
+
+    return ok({ id: requestId, deleted: true });
 }

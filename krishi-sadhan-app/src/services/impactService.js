@@ -33,7 +33,7 @@ export async function getImpactMetrics() {
         const sellListings = listings.filter((item) => item.listingType === 'sell');
 
         const pendingRequests = requests.filter((item) => item.status === 'pending');
-        const approvedRequests = requests.filter((item) => item.status === 'approved');
+        const approvedRequests = requests.filter((item) => item.status === 'approved' || item.status === 'accepted');
         const completedRequests = requests.filter((item) => item.status === 'completed');
         const recentRequests = requests.filter((item) => toMillis(item.createdAt) >= sevenDaysAgo);
 

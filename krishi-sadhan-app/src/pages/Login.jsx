@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { loginWithEmail } from '../services';
 
 const Login = ({ t }) => {
@@ -9,10 +9,12 @@ const Login = ({ t }) => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async () => {
         setError('');
+        setSuccessMsg('');
         setLoading(true);
 
         const result = await loginWithEmail({ email, password });
@@ -25,7 +27,11 @@ const Login = ({ t }) => {
 
         localStorage.setItem('kd_uid', result.data.uid);
         localStorage.setItem('kd_user', JSON.stringify(result.data.profile || {}));
-        navigate('/home');
+        setSuccessMsg(t('login_success') || 'Login Successful! Welcome to KrishiDhan...');
+        
+        setTimeout(() => {
+            navigate('/home');
+        }, 800);
     };
 
     return (
@@ -43,9 +49,17 @@ const Login = ({ t }) => {
                 </div>
 
                 <div className="space-y-6">
+                    {successMsg && (
+                        <div className="p-4 bg-green-50 border border-green-200 text-green-800 text-xs rounded-2xl flex items-center gap-3 font-bold shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                            <CheckCircle2 size={18} className="text-green-600 flex-shrink-0" />
+                            <span>{successMsg}</span>
+                        </div>
+                    )}
+
                     {error && (
-                        <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl text-center font-bold">
-                            {error}
+                        <div className="p-4 bg-red-50 border border-red-200 text-red-600 text-xs rounded-2xl flex items-center gap-3 font-bold shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                            <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
+                            <span>{error}</span>
                         </div>
                     )}
 

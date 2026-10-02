@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { registerWithEmail } from '../services';
 
 const Register = ({ t }) => {
@@ -14,6 +15,7 @@ const Register = ({ t }) => {
         confirmPassword: ''
     });
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -46,8 +48,10 @@ const Register = ({ t }) => {
             return;
         }
 
-        alert(t('alert_success') || 'Registration Successful');
-        navigate('/login');
+        setSuccessMsg(t('alert_success') || 'Registration Successful! Redirecting to Login...');
+        setTimeout(() => {
+            navigate('/login');
+        }, 1200);
     };
 
     return (
@@ -64,9 +68,17 @@ const Register = ({ t }) => {
                     <p className="text-gray-400 text-sm mt-1">Join the KrishiDhan marketplace</p>
                 </div>
 
+                {successMsg && (
+                    <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 text-xs rounded-2xl flex items-center gap-3 font-bold shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                        <CheckCircle2 size={18} className="text-green-600 flex-shrink-0" />
+                        <span>{successMsg}</span>
+                    </div>
+                )}
+
                 {error && (
-                    <div className="mb-6 p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-xl text-center font-bold">
-                        {error}
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 text-xs rounded-2xl flex items-center gap-3 font-bold shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                        <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
+                        <span>{error}</span>
                     </div>
                 )}
 

@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ========================================
+    // Collection: users
+    // ========================================
+    // Document ID = Firebase Auth UID
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId)
+                    && request.resource.data.uid == userId
+                    && request.resource.data.name is string
+                    && request.resource.data.phone is string
+                    && request.resource.data.city is string
+                    && request.resource.data.role is string;
+      allow update, delete: if isOwner(userId);
+    }
+
+    // ========================================
+    // Collection: listings
+    // ========================================
+    match /listings/{listingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.id is string
+                    && request.resource.data.category is string
+                    && request.resource.data.city is string
+                    && request.resource.data.listingType is string;
+      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // ========================================
+    // Collection: requests
+    // ========================================
+    match /requests/{requestId} {
+      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+      allow create: if isAuthenticated()
+                    && request.resource.data.farmerId == request.auth.uid
+                    && request.resource.data.ownerId is string
+                    && request.resource.data.listingId is string
+                    && request.resource.data.id is string
+                    && request.resource.data.status is string
+                    && request.resource.data.baseCost is number;
+      allow update: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+      allow delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || resource.data.farmerId == request.auth.uid);
+    }
+
+    // ========================================
+    // Collection: availability
+    // ========================================
+    match /availability/{availabilityId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated(); 
+      // Ideally check if they own the equipmentId, but leaving it loosely authenticated for simplicity unless deeper checks are needed
+    }
+  }
+}
+

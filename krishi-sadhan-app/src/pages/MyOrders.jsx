@@ -16,7 +16,7 @@ const MyOrders = ({ t }) => {
     const statusClassName = (status) => {
         const value = String(status || '').toLowerCase();
         if (value === 'pending') return 'text-amber-700 bg-amber-50 border-amber-100';
-        if (value === 'approved') return 'text-blue-700 bg-blue-50 border-blue-100';
+        if (value === 'approved' || value === 'accepted') return 'text-blue-700 bg-blue-50 border-blue-100';
         if (value === 'completed') return 'text-emerald-700 bg-emerald-50 border-emerald-100';
         if (value === 'cancelled') return 'text-gray-700 bg-gray-100 border-gray-200';
         if (value === 'rejected') return 'text-red-700 bg-red-50 border-red-100';
@@ -61,7 +61,7 @@ const MyOrders = ({ t }) => {
                     paymentStatus: request.paymentStatus || 'pending',
                     role,
                     ownerId: request.ownerId,
-                    renterId: request.renterId,
+                    farmerId: request.farmerId,
                     price: request.totalCost ?? (isRent ? listing.pricePerDay : listing.sellPrice),
                     isPaid: (request.paymentStatus || 'pending') === 'paid',
                     date: isRent && request.startDate && request.endDate
@@ -112,7 +112,7 @@ const MyOrders = ({ t }) => {
                 paymentStatus: request.paymentStatus || 'pending',
                 role: request.ownerId === uid ? 'received' : 'sent',
                 ownerId: request.ownerId,
-                renterId: request.renterId,
+                farmerId: request.farmerId,
                 price: request.totalCost ?? (isRent ? listing.pricePerDay : listing.sellPrice),
                 isPaid: (request.paymentStatus || 'pending') === 'paid',
                 date: isRent && request.startDate && request.endDate
@@ -170,7 +170,7 @@ const MyOrders = ({ t }) => {
             .filter((order) => order.role === viewTab)
             .filter((order) =>
                 activeTab === 'active'
-                    ? ['approved', 'pending'].includes(order.status)
+                    ? ['approved', 'accepted', 'pending'].includes(order.status)
                     : ['completed', 'cancelled', 'rejected'].includes(order.status)
             );
     }, [orders, activeTab, viewTab]);
@@ -226,7 +226,7 @@ const MyOrders = ({ t }) => {
                                             {item.role === 'received' && item.status === 'pending' && (
                                                 <>
                                                     <button
-                                                        onClick={() => handleStatusChange(item.id, 'approved')}
+                                                        onClick={() => handleStatusChange(item.id, 'accepted')}
                                                         disabled={actionLoadingId === item.id}
                                                         className="text-[10px] px-2 py-1 rounded-md bg-green-600 text-white font-bold disabled:opacity-60"
                                                     >
@@ -250,7 +250,7 @@ const MyOrders = ({ t }) => {
                                                     {t('cancel')}
                                                 </button>
                                             )}
-                                            {item.role === 'sent' && item.status === 'approved' && !item.isPaid && (
+                                            {item.role === 'sent' && ['approved', 'accepted'].includes(item.status) && !item.isPaid && (
                                                 <button
                                                     onClick={() => navigate('/payment', {
                                                         state: {
@@ -266,7 +266,7 @@ const MyOrders = ({ t }) => {
                                                     {t('pay_now')}
                                                 </button>
                                             )}
-                                            {item.role === 'received' && item.status === 'approved' && item.isPaid && (
+                                            {item.role === 'received' && ['approved', 'accepted'].includes(item.status) && item.isPaid && (
                                                 <button
                                                     onClick={() => handleStatusChange(item.id, 'completed')}
                                                     disabled={actionLoadingId === item.id}

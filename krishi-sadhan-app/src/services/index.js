@@ -1,8 +1,50 @@
-export { createUser, getUser, updateUser, registerWithEmail, loginWithEmail, logout } from './authService';
+// Collection A: Users
+export {
+    createUser,
+    getUser,
+    updateUser,
+    deleteUser,
+    registerWithEmail,
+    loginWithEmail,
+    logout
+} from './authService';
+
+// Cloudinary Image Storage
 export { uploadImages } from './cloudinaryService';
-export { createListing, getListings, getListingById, deleteListing } from './listingService';
-export { createRequest, getRequests, updateRequestStatus, updatePaymentStatus, deleteRequest } from './requestService';
+
+// Collection B: Listings
+export {
+    createListing,
+    getListings,
+    getListingById,
+    updateListing,
+    deleteListing
+} from './listingService';
+
+// Collection C: Requests
+export {
+    createRequest,
+    getRequests,
+    getRequestById,
+    updateRequestStatus,
+    updatePaymentStatus,
+    deleteRequest
+} from './requestService';
+
+// Collection D: Availability
+export {
+    createAvailability,
+    getAvailability,
+    checkEquipmentAvailability,
+    updateAvailability,
+    deleteAvailability,
+    releaseBookingAvailability
+} from './availabilityService';
+
+// Listing Creation Flow
 export { createListingFlow, createListingWithImages } from './createListingFlow';
+
+// Metrics & Catalog
 export { getImpactMetrics } from './impactService';
 export {
     getRentRateByCategory,
